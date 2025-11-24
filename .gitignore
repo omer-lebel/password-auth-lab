@@ -1,0 +1,13 @@
+
+# OS & Editor files
+.DS_Store
+.idea/
+.vscode/
+
+
+# Python
+__pycache__/
+.venv/
+
+# Databases
+*.db
