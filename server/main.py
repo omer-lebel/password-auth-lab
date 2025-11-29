@@ -11,9 +11,8 @@ from database import create_db_and_tables
 # def parse_args():
 #     parser = argparse.ArgumentParser(description="Auth API Server")
 #     parser.add_argument(
-#         "--hash",
+#         "--config",
 #         type=str,
-#         choices=["bcrypt", "bcrypt", "argon2", "debug"],
 #         help="Password hashing algorithm to use"
 #     )
 #     return parser.parse_args()
@@ -28,7 +27,6 @@ from database import create_db_and_tables
 #     if not hash_type in providers:
 #         raise Exception(f"Hash type {hash_type} not supported")
 #     return providers[hash_type]
-
 
 
 def configure_app(app: FastAPI):
