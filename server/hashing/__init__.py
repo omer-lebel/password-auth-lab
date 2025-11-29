@@ -3,23 +3,31 @@ from .bcrypt import BcryptHashProvider
 from .sha256 import Sha256HashProvider
 from .argon2 import Argon2HashProvider
 from .plain_text import PlainTextProvider
+from server.config.schema import HashingConfig, HashType
 
 
-def get_hash_provider(hash_type: str) -> HashProvider:
+def get_hash_provider(conf: HashingConfig) -> HashProvider:
+
     providers = {
-        "bcrypt": BcryptHashProvider(),
-        "sha256": Sha256HashProvider(),
-        "argon2": Argon2HashProvider(),
-        "debug": PlainTextProvider()
+        HashType.BCRYPT: lambda: BcryptHashProvider(
+            cost=conf.bcrypt_params.cost
+        ),
+        HashType.ARGON2: lambda: Argon2HashProvider(
+            time=conf.argon2_params.time,
+            memory=conf.argon2_params.memory,
+            parallelism=conf.argon2_params.parallelism
+        ),
+        HashType.SHA256: lambda: Sha256HashProvider(),
+        HashType.DEBUG: lambda: PlainTextProvider()
     }
-    return providers.get(hash_type, BcryptHashProvider())
 
+    hasher = providers.get(conf.type)
+    if not hasher:
+        raise ValueError(f"Unknown hash type: {conf.type}")
+
+    return hasher()
 
 __all__ = [
     "HashProvider",
-    "BcryptHashProvider",
-    "Sha256HashProvider",
-    "Argon2HashProvider",
-    "PlainTextProvider",
     "get_hash_provider"
 ]

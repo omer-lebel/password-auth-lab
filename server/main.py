@@ -1,36 +1,33 @@
 import argparse
+
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-import uvicorn
 from routers import router
+import uvicorn
+
+from config.config import AppConfig
 from database import create_db_and_tables
+from hashing import get_hash_provider
+from server.config import HashingConfig
 
-"""We will parse the args with this latter"""
-# def parse_args():
-#     parser = argparse.ArgumentParser(description="Auth API Server")
-#     parser.add_argument(
-#         "--config",
-#         type=str,
-#         help="Password hashing algorithm to use"
-#     )
-#     return parser.parse_args()
-#
-# def get_hash_provider(hash_type: str) -> HashProvider:
-#     providers = {
-#         "bcrypt": BcryptHashProvider(),
-#         "sha256": SHA256HashProvider(),
-#         "argon2": Argon2HashProvider(),
-#         "debug": NoHashProvider()
-#     }
-#     if not hash_type in providers:
-#         raise Exception(f"Hash type {hash_type} not supported")
-#     return providers[hash_type]
+PORT = 8080
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Auth API Server")
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="config.json",
+        help="Path to config JSON file (default: config.json)"
+    )
+    return parser.parse_args()
 
 
-def configure_app(app: FastAPI):
+def configure_app(app: FastAPI, hash_conf: HashingConfig) -> None:
     create_db_and_tables()
+    app.state.hash_provider = get_hash_provider(hash_conf)
     app.include_router(router)
 
     @app.get("/")
@@ -46,9 +43,12 @@ def configure_app(app: FastAPI):
 
 
 def main():
-    app = FastAPI(title="Auth API", version="1.0.0")
-    configure_app(app)
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    args = parse_args()
+    app_config = AppConfig.from_json(args.config)
+
+    app = FastAPI(title="Auth API")
+    configure_app(app, app_config.hashing)
+    uvicorn.run(app, host="127.0.0.1", port=PORT)
 
 
 if __name__ == "__main__":

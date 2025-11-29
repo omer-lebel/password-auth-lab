@@ -1,0 +1,20 @@
+{
+  "database": {
+    "path": "sqlite:///database.db"
+  },
+  "logging": {
+    "path": "logs/app.log",
+    "level": "INFO"
+  },
+  "hashing": {
+    "type": "sha256",
+    "bcrypt_params": { "cost": 12 },
+    "argon2_params": { "time": 1, "memory": 131072, "parallelism": 4 }
+  },
+  "protection": {
+    "pepper": {
+      "enabled": true,
+      "secret": "secret"
+    }
+  }
+}
