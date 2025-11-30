@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import Session, select
-from models import UserCredentials
-from database import get_session, User
+
+from server.models import UserCredentials
+from server.database import get_session, User
 from server.hashing import HashProvider
 
 router = APIRouter(tags=["auth"])
@@ -57,14 +58,12 @@ def login(
     db_user = session.exec(query).first()
     if not db_user:
         log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=False, reason="User not found")
-        log.debug(f"{client_ip} login failed - username '{user.username}' not found")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Verify password
     if not hasher.verify_password(user.password, db_user.password):
-        log.debug(f"{client_ip} login failed - wrong password")
         log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=False, reason="Wrong password")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=True)
+    log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=True, reason="success")
     return {"message": f"Login successful, welcome back {db_user.username}"}

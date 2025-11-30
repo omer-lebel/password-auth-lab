@@ -61,7 +61,7 @@ def setup_logger(audit_filename: str = "attempt.jsonl"):
     )
 
     # Register custom level
-    logger.level("AUDIT", no=45, color="<MAGENTA>")
+    logger.level("AUDIT", no=45, color="<YELLOW>")
     logger.add(AuditJsonSink(audit_filename), level="AUDIT")
     return logger
 

@@ -3,7 +3,7 @@ from .bcrypt import BcryptHashProvider
 from .sha256 import Sha256HashProvider
 from .argon2 import Argon2HashProvider
 from .plain_text import PlainTextProvider
-from server.config.schema import HashingConfig, HashType
+from ..config.schema import HashingConfig, HashType
 
 
 def get_hash_provider(conf: HashingConfig) -> HashProvider:
