@@ -14,3 +14,6 @@ __pycache__/
 
 # Config
 config.json
+
+# logs
+attempt.jsonl
