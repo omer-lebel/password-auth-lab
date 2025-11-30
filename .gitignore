@@ -11,3 +11,6 @@ __pycache__/
 
 # Databases
 *.db
+
+# Config
+config.json

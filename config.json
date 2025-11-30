@@ -3,11 +3,11 @@
     "path": "sqlite:///database.db"
   },
   "logging": {
-    "path": "logs/app.log",
+    "path": "attempt.jsonl",
     "level": "INFO"
   },
   "hashing": {
-    "type": "sha256",
+    "type": "debug",
     "bcrypt_params": { "cost": 12 },
     "argon2_params": { "time": 1, "memory": 131072, "parallelism": 4 }
   },

@@ -1,0 +1,1 @@
+{"timestamp": "2025-11-30 16:36:49.490", "hash_type": "sha256", "pepper_enable": false, "rate_limit_enable": false, "account_lockout_enable": false, "ip": "127.0.0.1", "username": "tom", "attempt_count": -1, "success": true, "failure_reason": ""}
