@@ -1,4 +1,4 @@
-# Passwords Authentication Lab
+# 🔐 Passwords Authentication Lab
 
 ## 🚀 Getting Started 
 
@@ -17,6 +17,36 @@ pip install -r requirements.txt
 python main.py
 ```
 
+---
+
+## 📦 Adding New Dependencies
+
+### 1. Add to `requirements.in`
+Edit your `requirements.in` file and add the new package:
+```
+requests
+libs # new dependency
+```
+
+### 2. Recompile
+This will regenerate the `requirements.txt` file:
+```bash
+pip-compile --upgrade requirements.in
+```
+
+### 3. Update Your Environment
+```bash
+pip install -r requirements.txt
+```
+
+> **⚠️ Note: To downgrade modules:**
+> 1. Deactivate env if needed: `deactivate`
+> 2. Delete old env: `rm -rf .venv`
+> 3. Create new env: `python -m venv .venv`
+> 4. Activate it: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`)
+> 5. Install pip-tools: `pip install pip-tools`
+> 6. Edit `requirements.in` as needed (pin versions like `libs==1.2.3`)
+> 7. Run step 2 and 3 (Recompile & reinstall)
 ---
 
 ## ⚙️ Git Cheat Sheet - basic workflow
@@ -57,4 +87,3 @@ Do this at more significant checkpoints — after several commits or when you co
 ```bash
 git push
 ```
-
