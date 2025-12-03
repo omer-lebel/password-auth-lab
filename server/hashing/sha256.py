@@ -5,7 +5,7 @@ from .base import HashProvider
 class Sha256HashProvider(HashProvider):
 
     def hash_password(self, password: str) -> str:
-        return sha256_crypt.hash(password)
+        return sha256_crypt.hash(password + self.pepper)
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return sha256_crypt.verify(plain_password, hashed_password)
+        return sha256_crypt.verify(plain_password + self.pepper, hashed_password)
