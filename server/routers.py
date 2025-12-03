@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import Session, select
 
-from server.models import UserCredentials
-from server.database import get_session, User
+from server.models import UserCredentials, User
+from server.database import get_session
 from server.hashing import HashProvider
 
 router = APIRouter(tags=["auth"])
