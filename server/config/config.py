@@ -9,6 +9,10 @@ class AppConfig(BaseSettings):
     hashing: HashingConfig
     protection: ProtectionConfig
 
+    PEPPER: str | None = None
+    class Config:
+        env_file = "server/.env"
+
     @classmethod
     def from_json(cls, file_path: str) -> "AppConfig":
         try:

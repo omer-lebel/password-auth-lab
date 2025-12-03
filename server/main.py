@@ -1,14 +1,17 @@
 import argparse
+from mimetypes import inited
+from typing import Optional
+
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-
+import os
 import uvicorn
 
-
+from server.protection.protection_manager import ProtectionManager
 from server.routers import router
 from server.config.config import AppConfig, HashingConfig
 from server.database import create_db_and_tables
-from server.hashing import get_hash_provider
+from server.hashing import HashProvider, HashProviderFactory
 from server.log import setup_logger, get_logger
 
 PORT = 8080
@@ -31,10 +34,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def configure_app(app: FastAPI, hash_conf: HashingConfig) -> None:
+def configure_app(app: FastAPI, conf: AppConfig) -> None:
     create_db_and_tables()
-    app.state.hash_provider = get_hash_provider(hash_conf)
-    app.state.logger = get_logger()
+    app.state.hash_provider = HashProviderFactory(conf.hashing, conf.PEPPER).create()
+    app.state.protection_mng = ProtectionManager(conf.protection)
     app.include_router(router)
 
     @app.get("/")
@@ -45,12 +48,12 @@ def configure_app(app: FastAPI, hash_conf: HashingConfig) -> None:
 def main():
 
     args = parse_args()
-    app_config = AppConfig.from_json(args.config)
-    log = setup_logger(app_config.logging.path)
+    conf = AppConfig.from_json(args.config)
+    log = setup_logger(conf.logging.path)
 
     app = FastAPI(title="Auth API")
 
-    configure_app(app, app_config.hashing)
+    configure_app(app, conf)
 
     log.debug(f"started server on http://127.0.0.1:{PORT} (Press CTRL+C to quit)")
     uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="info", access_log=False)

@@ -1,24 +1,20 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import Session, select
 
+from server.log import logger as log
 from server.models import UserCredentials, User
 from server.database import get_session
 from server.hashing import HashProvider
+from server.protection import ProtectionManager, ProtectionResult
+
 
 router = APIRouter(tags=["auth"])
 
-def get_hash_provider_dependency(request: Request):
-    return request.app.state.hash_provider
-
-def get_logger_dependency(request: Request):
-    return request.app.state.logger
 
 @router.post("/register")
 def register(
         user: UserCredentials,
         session: Session = Depends(get_session),
-        log = Depends(get_logger_dependency),
-        hasher: HashProvider = Depends(get_hash_provider_dependency),
         request: Request = None):
 
     client_ip = request.client.host
@@ -31,6 +27,7 @@ def register(
         raise HTTPException(status_code=400, detail="Username already taken")
 
     # Create new user
+    hasher: HashProvider = request.app.state.hash_provider
     hashed_pwd = hasher.hash_password(user.password)
     db_user = User(username=user.username, password=hashed_pwd)
     session.add(db_user)
@@ -46,8 +43,6 @@ def register(
 def login(
         user: UserCredentials,
         session: Session = Depends(get_session),
-        log = Depends(get_logger_dependency),
-        hasher: HashProvider = Depends(get_hash_provider_dependency),
         request: Request = None):
 
     client_ip = request.client.host
@@ -57,13 +52,22 @@ def login(
     query = select(User).where(User.username == user.username)
     db_user = session.exec(query).first()
     if not db_user:
-        log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=False, reason="User not found")
+        log.audit(username=user.username, attempt_count=-1, success=False, reason="User not found")
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    protections: ProtectionManager = request.app.state.protection_mng
+    result: ProtectionResult = protections.validate_request(db_user)
+    if not result.allowed:
+        log.audit(username=user.username, success=False, reason=result.reason)
+        raise HTTPException(status_code=result.status_code, detail=result.user_msg)
 
     # Verify password
+    hasher: HashProvider = request.app.state.hash_provider
     if not hasher.verify_password(user.password, db_user.password):
-        log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=False, reason="Wrong password")
+        protections.record_failure(db_user)
+        log.audit(username=user.username, attempt_count=-1, success=False, reason="Wrong password")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=True, reason="success")
+    protections.reset(db_user)
+    log.audit(username=user.username, attempt_count=-1, success=True, reason="success")
     return {"message": f"Login successful, welcome back {db_user.username}"}

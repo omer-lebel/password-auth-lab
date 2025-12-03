@@ -1,11 +1,22 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Optional
 from server.models import User
+
+
+@dataclass
+class ProtectionResult:
+    allowed: bool
+    status_code: Optional[int] = None
+    user_msg: Optional[str] = None
+    reason: Optional[str] = None
+
 
 class Protection(ABC):
     """Abstract base class for password hashing strategies"""
 
     @abstractmethod
-    def validate_request(self, user: User) -> None:
+    def validate_request(self, user: User) -> ProtectionResult:
         pass
 
     @abstractmethod

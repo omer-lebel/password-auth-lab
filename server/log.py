@@ -1,4 +1,3 @@
-import loguru
 from loguru import logger
 import json
 import sys
@@ -41,9 +40,8 @@ class AuditJsonSink:
 
 
 
-def audit(ip: str, username: str, attempt_count: int, success: bool, reason: str = "") -> None:
+def audit(username: str, attempt_count: int, success: bool, reason: str = "") -> None:
     logger.bind(
-        ip=ip,
         username=username,
         success=success,
         attempt_count=attempt_count

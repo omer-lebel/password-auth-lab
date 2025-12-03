@@ -1,28 +1,31 @@
 import time
 import json
-from fastapi import HTTPException
-from .base import Protection
+
+from server.log import logger as log
+from .base import Protection, ProtectionResult
 from server.models import User
+from server.config.schema import RateLimitingConfig
 
 
 class RateLimitProtection(Protection):
-    def __init__(self, max_attempts: int = 10, window_seconds: int = 30, base_lock_second : int = 60):
-        self.max_attempts = max_attempts
-        self.window_seconds = window_seconds
-        self.base_lock_second = base_lock_second
+    def __init__(self, conf: RateLimitingConfig):
+        self.window_seconds = conf.window_seconds
+        self.max_attempts = conf.max_attempt_per_time
+        self.initial_lock_second = conf.initial_lock_second
 
-
-    def validate_request(self, user: User) -> None:
+    def validate_request(self, user: User) -> ProtectionResult:
         now = time.time()
         if user.lockout_until and now < user.lockout_until:
             remaining = user.lockout_until - now
             m = remaining // 60
             s = remaining % 60
-            raise HTTPException(status_code=403,
-                                detail=f"Account locked. Try again in {m}m :{s}s")
-
-
-
+            return ProtectionResult(
+                allowed=False,
+                reason= "rate limiting",
+                user_msg = f"Rate limited, try again in {m}m :{s}s",
+                status_code=429
+            )
+        return ProtectionResult(allowed=True)
 
     def record_failure(self, user: User) -> None:
         """
@@ -38,11 +41,10 @@ class RateLimitProtection(Protection):
 
         #  Check if exceeded rate limit
         if len(attempts) > self.max_attempts:
-            lock_time = self.base_lock_second * (2 ** user.lockout_count)
+            lock_time = self.initial_lock_second * (2 ** user.lockout_count)
             user.lockout_until = int(now + lock_time)
             user.lockout_count += 1
             self.set_rate_attempts(user, [])
-
 
     def reset(self, user: User) -> None:
         self.set_rate_attempts(user, [])
