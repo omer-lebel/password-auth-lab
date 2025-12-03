@@ -5,14 +5,16 @@ from .bcrypt import BcryptHashProvider
 from .argon2 import Argon2HashProvider
 from .sha256 import Sha256HashProvider
 from .plain_text import PlainTextProvider
-
+from server.log import logger as log
 from server.config.schema import HashingConfig, HashType
 
 
 class HashProviderFactory:
     def __init__(self, conf: HashingConfig, pepper: Optional[str]):
-        if not pepper:
-            raise RuntimeError("PEPPER is required for secure hashing")
+        if conf.pepper_enable:
+            if pepper is None or pepper == "":
+                raise RuntimeError("PEPPER environment variable is not set")
+            log.info(f"PEPPER environment variable: {pepper}")
 
         self.conf = conf
         self.pepper = pepper
@@ -28,7 +30,7 @@ class HashProviderFactory:
         builder = providers.get(self.conf.type)
         if not builder:
             raise ValueError(f"Unknown hash type: {self.conf.type}")
-
+        log.info(f"Building hash provider: {self.conf.type}")
         return builder()
 
     def _create_bcrypt(self) -> HashProvider:

@@ -6,7 +6,6 @@ from .rate_limmiting import RateLimitProtection
 from .account_lockout import AccountLockoutProtection
 
 
-
 class ProtectionManager:
     def __init__(self, conf: ProtectionConfig):
         self.protections: List[Protection] = []

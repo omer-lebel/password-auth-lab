@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 from .base import HashProvider
-
+from server.log import logger as log
 
 class Argon2HashProvider(HashProvider):
     def __init__(self, pepper: str = "", time: int = 1, memory: int = 65536, parallelism=1):
@@ -13,6 +13,7 @@ class Argon2HashProvider(HashProvider):
             argon2__time_cost=time,
             argon2__parallelism=parallelism
         )
+        log.info(f'Argon2 initialized with time:{time}, memory:{memory}, parallelism:{parallelism}')
 
     def hash_password(self, password: str) -> str:
         return self._context.hash(password + self.pepper)

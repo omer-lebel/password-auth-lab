@@ -17,6 +17,8 @@ class Protection(ABC):
 
     @abstractmethod
     def validate_request(self, user: User) -> ProtectionResult:
+        """check if the user is block
+        function should NOT change the user (treat User as const)"""
         pass
 
     @abstractmethod

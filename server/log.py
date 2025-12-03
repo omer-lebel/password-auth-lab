@@ -40,11 +40,10 @@ class AuditJsonSink:
 
 
 
-def audit(username: str, attempt_count: int, success: bool, reason: str = "") -> None:
+def audit(username: str, success: bool, reason: str = "") -> None:
     logger.bind(
         username=username,
         success=success,
-        attempt_count=attempt_count
     ).log("AUDIT", reason)
 
 

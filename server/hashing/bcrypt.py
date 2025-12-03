@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 from .base import HashProvider
-
+from server.log import logger as log
 
 class BcryptHashProvider(HashProvider):
     def __init__(self, pepper: str = "", cost: int = 12):
@@ -10,6 +10,7 @@ class BcryptHashProvider(HashProvider):
             deprecated="auto",
             bcrypt__rounds=cost
         )
+        log.info(f'Bcrypt initialized with cost:{cost}')
 
     def hash_password(self, password: str) -> str:
         return self._context.hash(password + self.pepper)
