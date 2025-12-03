@@ -1,10 +1,6 @@
 import argparse
-from mimetypes import inited
-from typing import Optional
-
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-import os
 import uvicorn
 
 from server.protection.protection_manager import ProtectionManager
@@ -12,16 +8,9 @@ from server.routers import router
 from server.config.config import AppConfig, HashingConfig
 from server.database import create_db_and_tables
 from server.hashing import HashProvider, HashProviderFactory
-from server.log import setup_logger, get_logger
+from server.log import AuditConfig, setup_logger
 
 PORT = 8080
-
-"""
-todo:
-3. protection - pepper, ask in the forum about the other
-4. rate limiting (sec / min / hour / user??)
-5. 
-"""
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Auth API Server")
@@ -49,28 +38,22 @@ def main():
 
     args = parse_args()
     conf = AppConfig.from_json(args.config)
-    log = setup_logger(conf.logging.path)
+
+    audit_config = AuditConfig(conf.hashing.type,
+                conf.hashing.pepper_enable,
+                conf.protection.account_lockout.enabled,
+                conf.protection.rate_limiting.enabled)
+
+    log = setup_logger(audit_config, conf.logging.path)
+    log.debug(f"configure server with: {AuditConfig}")
 
     app = FastAPI(title="Auth API")
 
     configure_app(app, conf)
 
-    log.debug(f"started server on http://127.0.0.1:{PORT} (Press CTRL+C to quit)")
+    log.info(f"started server on http://127.0.0.1:{PORT} (Press CTRL+C to quit)")
     uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="info", access_log=False)
-
 
 
 if __name__ == "__main__":
     main()
-
-
-
-"""
- palin text?
- salt - uniq prefix to password
- pepper - same prefix to password, env var. what is the point, attack are online!
- rate limit (per user) - ?
- account lockout - ?
- captcha - token the user get after 10 attempts
- TOTP - auth base time + shared secret. should we add more endpoint for register with totp?
-"""

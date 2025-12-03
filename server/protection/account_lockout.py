@@ -27,7 +27,7 @@ class AccountLockoutProtection(Protection):
 
     def record_failure(self, user: User) -> None:
         user.failed_attempts += 1
-        log.debug(f"failed_attempts={user.failed_attempts}/{self.max_failed_attempts}")
+        log.debug(f"failed attempts: {user.failed_attempts}/{self.max_failed_attempts}")
 
         if user.failed_attempts >= self.max_failed_attempts:
             user.is_blocked = True

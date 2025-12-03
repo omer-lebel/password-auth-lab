@@ -47,7 +47,7 @@ class RateLimitProtection(Protection):
         attempts = [ts for ts in attempts if now - ts < self.window_seconds]
         attempts.append(now)
         self.set_rate_attempts(user, attempts)
-        log.debug(f"(attempts_in_window={len(attempts)}/{self.max_attempts})")
+        log.debug(f"attempts in last {self.window_seconds}s: {len(attempts)}/{self.max_attempts}")
 
         #  Check if exceeded rate limit
         if len(attempts) >= self.max_attempts:

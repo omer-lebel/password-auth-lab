@@ -1,17 +1,20 @@
 from loguru import logger
+from dataclasses import dataclass
 import json
 import sys
 
+@dataclass
 class AuditConfig:
-    hash_type: str = "sha256"
-    pepper_enable: bool = False
-    rate_limit_enable: bool = False
-    account_lockout_enable: bool = False
+    hash_type: str
+    pepper_enable: bool
+    account_lockout_enable: bool
+    rate_limit_enable: bool
 
 
 class AuditJsonSink:
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, conf: AuditConfig):
         self.filename = filename
+        self.conf = conf
 
     def __call__(self, msg):
         r = msg.record
@@ -20,15 +23,13 @@ class AuditJsonSink:
             "timestamp": r["time"].strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
 
             # Global config
-            "hash_type": AuditConfig.hash_type,
-            "pepper_enable": AuditConfig.pepper_enable,
-            "rate_limit_enable": AuditConfig.rate_limit_enable,
-            "account_lockout_enable": AuditConfig.account_lockout_enable,
+            "hash_type": self.conf.hash_type,
+            "pepper_enable": self.conf.pepper_enable,
+            "account_lockout_enable": self.conf.account_lockout_enable,
+            "rate_limit_enable": self.conf.rate_limit_enable,
 
             # Per-request (dynamic) fields
-            "ip": r["extra"].get("ip"),
             "username": r["extra"].get("username"),
-            "attempt_count": r["extra"].get("attempt_count"),
             "success": r["extra"].get("success"),
 
             # The message itself becomes failure_reason or success_reason
@@ -47,7 +48,7 @@ def audit(username: str, success: bool, reason: str = "") -> None:
     ).log("AUDIT", reason)
 
 
-def setup_logger(audit_filename: str = "attempt.jsonl"):
+def setup_logger(audit_config : AuditConfig, audit_filename: str = "attempt.jsonl"):
     logger.remove()
 
     # Console for developers only
@@ -59,7 +60,7 @@ def setup_logger(audit_filename: str = "attempt.jsonl"):
 
     # Register custom level
     logger.level("AUDIT", no=45, color="<YELLOW>")
-    logger.add(AuditJsonSink(audit_filename), level="AUDIT")
+    logger.add(AuditJsonSink(audit_filename, audit_config), level="AUDIT")
     return logger
 
 
