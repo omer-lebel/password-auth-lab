@@ -14,7 +14,8 @@ pip install -r requirements.txt
 
 ### 3. Run the server
 ```bash
-python main.py
+cd password-auth-lab
+python -m server.main
 ```
 
 ---
