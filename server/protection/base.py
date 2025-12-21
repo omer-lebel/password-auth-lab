@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
-from server.models import User
+from server.database import User
 
 
 @dataclass

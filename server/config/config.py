@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 import json
-from .schema import DatabaseConfig, LoggingConfig, HashingConfig, ProtectionConfig
+from server.config.setting import DatabaseConfig, LoggingConfig, HashingConfig, ProtectionConfig
 
 
 class AppConfig(BaseSettings):

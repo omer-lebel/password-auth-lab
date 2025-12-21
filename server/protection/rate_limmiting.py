@@ -3,8 +3,8 @@ import json
 
 from server.log import logger as log
 from .base import Protection, ProtectionResult, AuthContext
-from server.models import User
-from server.config.schema import RateLimitingConfig
+from server.database import User
+from server.config.setting import RateLimitingConfig
 
 
 class RateLimitProtection(Protection):
@@ -24,8 +24,8 @@ class RateLimitProtection(Protection):
             remaining = user.lockout_until - now
             m = int(remaining // 60)
             s = int(remaining % 60)
-            log.debug(f"Rate limit active for user '{user.username} "
-                      f"(remaining={int(remaining)}s | lockout_count={user.lockout_count})")
+            log.debug(f"Rate limit active for user '{user.username}' "
+                      f"(remaining time={int(remaining)}s | lockout_count={user.lockout_count})")
 
             return ProtectionResult(
                 allowed=False,
@@ -44,10 +44,9 @@ class RateLimitProtection(Protection):
         now = time.time()
 
         # Update window
-        attempts = self.parse_rate_attempts(user.rate_attempts)
-        attempts = [ts for ts in attempts if now - ts < self.window_seconds]
+        attempts = [ts for ts in user.rate_attempts if now - ts < self.window_seconds]
         attempts.append(now)
-        self.set_rate_attempts(user, attempts)
+        user.rate_attempts = attempts
         log.debug(f"attempts in last {self.window_seconds}s: {len(attempts)}/{self.max_attempts}")
 
         #  Check if exceeded rate limit
@@ -55,21 +54,10 @@ class RateLimitProtection(Protection):
             lock_time = self.initial_lock_second * (2 ** user.lockout_count)
             user.lockout_until = int(now + lock_time)
             user.lockout_count += 1
-            self.set_rate_attempts(user, [])
-            log.debug(f"User '{user.username}' EXCEEDED rate limit. Locking for {lock_time}s ")
+            user.rate_attempts = []
+            log.debug(f"User '{user.username}' EXCEEDED rate limit. Locking for {lock_time}s (lockout_count={user.lockout_count})")
 
     def reset(self, user: User) -> None:
-        self.set_rate_attempts(user, [])
+        user.rate_attempts = []
         user.lockout_count = 0
         user.lockout_until = None
-
-    @staticmethod
-    def parse_rate_attempts(rate_attempts_str: str) -> list[float]:
-        try:
-            return json.loads(rate_attempts_str)
-        except json.decoder.JSONDecodeError:
-            return []
-
-    @staticmethod
-    def set_rate_attempts(user, attempts):
-        user.rate_attempts = json.dumps(attempts)

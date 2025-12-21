@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import Session, select
 
 from server.log import get_logger
-from server.models import UserCredentials, User
-from server.database import get_session
+from server.schema import UserRegister, UserLogin
+from server.database import get_session, User
 from server.hashing import HashProvider
 from server.protection import ProtectionManager, ProtectionResult
 
@@ -13,7 +13,7 @@ log = get_logger()
 
 @router.post("/register")
 async def register(
-        user: UserCredentials,
+        user: UserRegister,
         session: Session = Depends(get_session),
         request: Request = None):
 
@@ -38,10 +38,9 @@ async def register(
     return {"message": f"Register successful, welcome {user.username}" }
 
 
-
 @router.post("/login")
 async def login(
-        user: UserCredentials,
+        user: UserLogin,
         session: Session = Depends(get_session),
         request: Request = None):
 
@@ -71,6 +70,10 @@ async def login(
         request.state.failure_reason = "Wrong password"
         raise HTTPException(status_code=401, detail="Wrong username or password")
 
+    # verify totp if needed
+
+
+
     protections.reset(db_user)
     session.commit()
     return {"message": f"Login successful, welcome back {db_user.username}"}
@@ -85,6 +88,7 @@ async def generate_captcha_token(
 
     protections: ProtectionManager = request.app.state.protection_mng
 
+    # verify user and make sure it has the right group seed
     query = select(User).where(User.username == username)
     exist_user = session.exec(query).first()
     if not exist_user or protections.group_seed != input_group_seed:
