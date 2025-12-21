@@ -29,8 +29,8 @@
       "max_failed_attempts": 3
     },
     "totp": {
-      "enabled": true,
-      "window_size_secs": 60
+      "enabled": false,
+      "max_drift_seconds": 30
     }
   }
 }

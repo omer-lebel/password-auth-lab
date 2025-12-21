@@ -1,5 +1,5 @@
-import pyotp
-from pydantic import field_validator
+import base64
+from pydantic import field_validator, validator
 from sqlmodel import SQLModel
 from typing import Optional
 
@@ -11,6 +11,18 @@ class UserRegister(SQLModel):
     totp_secret: Optional[str] = None
 
 
+    @field_validator('totp_secret')
+    @classmethod
+    def validate_base32_secret(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return v
+        try:
+            base64.b32decode(v, casefold=True)
+            return v
+        except Exception:
+            raise ValueError('TOTP secret must be a valid Base32 string (A-Z, 2-7)')
+
+
 class UserLogin(SQLModel):
     username: str
     password: str
@@ -18,12 +30,3 @@ class UserLogin(SQLModel):
     totp_code: Optional[str] = None
 
 
-@field_validator('totp_secret')
-def validate_base32_secret(cls, v):
-    if v is None or v == "":
-        return v
-    try:
-        pyotp.TOTP(v)
-        return v
-    except Exception:
-        raise ValueError('TOTP secret must be a valid Base32 string (A-Z, 2-7)')

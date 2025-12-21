@@ -1,5 +1,4 @@
 import time
-
 import pyotp
 
 from .base import Protection, ProtectionResult, AuthContext
@@ -9,14 +8,16 @@ from server.config.setting import TOTPConfig
 
 
 class TOTPProtection(Protection):
+    STEP_SIZE = 30
 
     def __init__(self, conf: TOTPConfig):
-        self.offest = [-1, 0, 1]
+        drift_steps = conf.max_drift_seconds // self.STEP_SIZE
+        self.offest = list(range(-drift_steps, drift_steps + 1))
         log.info(f"TOTP initialized")
 
     def validate_request(self, context: AuthContext) -> ProtectionResult:
         # only validate that totp code was provided
-        if context.user.totp_sercret and not context.totp_code:
+        if context.user.totp_secret and not context.totp_code:
             return ProtectionResult(
                 allowed=False,
                 reason="TOTP code missing",
@@ -34,16 +35,16 @@ class TOTPProtection(Protection):
 
 
     def verify(self, secret: str, input_code: str):
-        if not secret:
+        if not secret or not input_code:
             return False
 
-        totp = pyotp.TOTP(secret)
+        totp_engine = pyotp.TOTP(secret)
         now = int(time.time())
 
         for offset in self.offest:
-            check_time = now + (offset * 30)
-            expected_code = totp.at(check_time)
-            if expected_code == input_code:
+            drift = offset * self.STEP_SIZE
+            log.debug(f"check TOTP with offset: {offset}, drift: {drift}")
+            if totp_engine.at(now + drift) == input_code:
+                log.info(f"TOTP match found with clock drift of {drift} seconds from now")
                 return True
-
         return False

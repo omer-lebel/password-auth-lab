@@ -62,7 +62,7 @@ class CaptchaConfig(BaseModel):
 
 class TOTPConfig(BaseModel):
     enabled: bool
-    window_size_secs: int = Field(ge=1)
+    max_drift_seconds: int = Field(ge=1)
 
 class ProtectionConfig(BaseModel):
     account_lockout: AccountLockoutConfig

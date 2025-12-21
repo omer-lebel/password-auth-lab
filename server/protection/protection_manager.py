@@ -26,7 +26,7 @@ class ProtectionManager:
             self.protections.append(self.captcha)
 
         if conf.totp.enabled:
-            self.totp = TOTPProtection()
+            self.totp = TOTPProtection(conf.totp)
             self.protections.append(self.totp)
 
     def validate_request(self, user: User, captcha_token: str, totp_code: str) -> ProtectionResult:
