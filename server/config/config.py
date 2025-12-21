@@ -4,6 +4,7 @@ from .schema import DatabaseConfig, LoggingConfig, HashingConfig, ProtectionConf
 
 
 class AppConfig(BaseSettings):
+    group_seed: int
     database: DatabaseConfig
     logging: LoggingConfig
     hashing: HashingConfig

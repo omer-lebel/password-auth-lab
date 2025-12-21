@@ -11,12 +11,16 @@ class ProtectionResult:
     user_msg: Optional[str] = None
     reason: Optional[str] = None
 
+@dataclass
+class AuthContext:
+    user: User
+    captcha_token: str = ""
 
 class Protection(ABC):
     """Abstract base class for password hashing strategies"""
 
     @abstractmethod
-    def validate_request(self, user: User) -> ProtectionResult:
+    def validate_request(self, context: AuthContext) -> ProtectionResult:
         """check if the user is block
         function should NOT change the user (treat User as const)"""
         pass

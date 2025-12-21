@@ -1,4 +1,4 @@
-from .base import Protection, ProtectionResult
+from .base import Protection, ProtectionResult, AuthContext
 from server.log import logger as log
 from server.models import User
 from server.config.schema import AccountLockoutConfig
@@ -10,10 +10,10 @@ class AccountLockoutProtection(Protection):
         self.max_failed_attempts = conf.max_failed_attempts
         log.info(f"Account Lockout initialized (max_failed_attempts={self.max_failed_attempts})")
 
-    def validate_request(self, user: User) -> ProtectionResult:
+    def validate_request(self, context: AuthContext) -> ProtectionResult:
 
-        if user.is_blocked:
-            log.debug(f"Account lockout active for user '{user.username}'")
+        if context.user.is_blocked:
+            log.debug(f"Account lockout active for user '{context.user.username}'")
             return ProtectionResult(
                 allowed=False,
                 user_msg = "Account locked, contact admin to reset your password",

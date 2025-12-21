@@ -5,6 +5,7 @@ from typing import Optional
 class UserCredentials(SQLModel):
     username: str
     password: str
+    captcha_token: Optional[str] = None
 
 # model for db
 class User(SQLModel, table=True):
@@ -24,6 +25,6 @@ class User(SQLModel, table=True):
 
     # captcha
     captcha_required: bool = False
-
+    failed_attempts_captcha_counter: int = 0
     # totp
     totp_secret: Optional[str] = None

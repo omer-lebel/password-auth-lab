@@ -2,7 +2,7 @@ import time
 import json
 
 from server.log import logger as log
-from .base import Protection, ProtectionResult
+from .base import Protection, ProtectionResult, AuthContext
 from server.models import User
 from server.config.schema import RateLimitingConfig
 
@@ -17,8 +17,9 @@ class RateLimitProtection(Protection):
             f"initial_lock={self.initial_lock_second}s)"
         )
 
-    def validate_request(self, user: User) -> ProtectionResult:
+    def validate_request(self, context: AuthContext) -> ProtectionResult:
         now = time.time()
+        user = context.user
         if user.lockout_until and now < user.lockout_until:
             remaining = user.lockout_until - now
             m = int(remaining // 60)
@@ -55,7 +56,7 @@ class RateLimitProtection(Protection):
             user.lockout_until = int(now + lock_time)
             user.lockout_count += 1
             self.set_rate_attempts(user, [])
-            log.debug(f"User '{user.username}' EXCEEDED rate limit.Locking for {lock_time}s ")
+            log.debug(f"User '{user.username}' EXCEEDED rate limit. Locking for {lock_time}s ")
 
     def reset(self, user: User) -> None:
         self.set_rate_attempts(user, [])

@@ -1,4 +1,5 @@
 {
+  "group_seed": 509041496,
   "database": {
     "path": "sqlite:///database.db"
   },
@@ -22,6 +23,10 @@
       "window_seconds": 60,
       "max_attempt_per_time": 10,
       "initial_lock_second": 30
+    },
+    "captcha": {
+      "enabled": true,
+      "max_failed_attempts": 3
     }
   }
 }

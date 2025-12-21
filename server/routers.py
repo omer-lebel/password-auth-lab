@@ -12,7 +12,7 @@ router = APIRouter(tags=["auth"])
 log = get_logger()
 
 @router.post("/register")
-def register(
+async def register(
         user: UserCredentials,
         session: Session = Depends(get_session),
         request: Request = None):
@@ -40,7 +40,7 @@ def register(
 
 
 @router.post("/login")
-def login(
+async def login(
         user: UserCredentials,
         session: Session = Depends(get_session),
         request: Request = None):
@@ -58,7 +58,7 @@ def login(
         raise HTTPException(status_code=401, detail="Wrong username or password")
 
     # check if user currently block
-    result: ProtectionResult = protections.validate_request(db_user)
+    result: ProtectionResult = protections.validate_request(db_user, user.captcha_token)
     if not result.allowed:
         request.state.failure_reason = result.reason
         raise HTTPException(status_code=result.status_code, detail=result.user_msg)
@@ -74,3 +74,21 @@ def login(
     protections.reset(db_user)
     session.commit()
     return {"message": f"Login successful, welcome back {db_user.username}"}
+
+
+@router.post("/admin/generate_token/{group_seed}")
+async def generate_captcha_token(
+        input_group_seed: int,
+        username: str,
+        session: Session = Depends(get_session),
+        request: Request = None):
+
+    protections: ProtectionManager = request.app.state.protection_mng
+
+    query = select(User).where(User.username == username)
+    exist_user = session.exec(query).first()
+    if not exist_user or protections.group_seed != input_group_seed:
+        raise HTTPException(status_code=403, detail="Invalid credentials")
+
+    token = protections.generate_captcha_token(username)
+    return {"captcha_token": token}

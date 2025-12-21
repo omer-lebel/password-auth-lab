@@ -7,7 +7,7 @@ import sys
 #                        Configuration
 # ============================================================
 
-URL = "http://localhost:8000/login"
+URL = "http://127.0.0.1:8080/login"
 USERS_FILE = "users.txt"
 PASSWORDS_FILE = "passwords.txt"
 LOG_FILE = "log.txt"
@@ -50,9 +50,7 @@ def try_login(username, password):
         print(f"[TIMEOUT] Server did not respond for user {username}. Retrying later.")
         return
     except requests.exceptions.ConnectionError:
-        print(f"[ERROR] Could not connect to server. Is it running?")
-        time.sleep(1)
-        return
+        raise Exception("Could not connect to server.")
     except Exception as e:
         print(f"[ERROR] Unexpected error during login for {username}: {e}")
         return

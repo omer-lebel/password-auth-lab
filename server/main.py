@@ -26,8 +26,8 @@ def parse_args():
 
 def configure_app(app: FastAPI, conf: AppConfig) -> None:
     create_db_and_tables()
-    app.state.hash_provider = HashProviderFactory(conf.hashing, conf.PEPPER).create()
-    app.state.protection_mng = ProtectionManager(conf.protection)
+    app.state.hash_provider = HashProviderFactory(conf=conf.hashing, pepper=conf.PEPPER).create()
+    app.state.protection_mng = ProtectionManager(conf=conf.protection, group_seed=conf.group_seed)
     app.add_middleware(AuditMiddleware)
     app.include_router(router)
 

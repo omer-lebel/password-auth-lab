@@ -56,6 +56,11 @@ class RateLimitingConfig(BaseModel):
     max_attempt_per_time: int = Field(ge=1)
     initial_lock_second: int = Field(ge=1)
 
+class CaptchaConfig(BaseModel):
+    enabled: bool
+    max_failed_attempts: int = Field(ge=1)
+
 class ProtectionConfig(BaseModel):
     account_lockout: AccountLockoutConfig
     rate_limiting: RateLimitingConfig
+    captcha: CaptchaConfig
