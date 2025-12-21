@@ -60,7 +60,12 @@ class CaptchaConfig(BaseModel):
     enabled: bool
     max_failed_attempts: int = Field(ge=1)
 
+class TOTPConfig(BaseModel):
+    enabled: bool
+    window_size_secs: int = Field(ge=1)
+
 class ProtectionConfig(BaseModel):
     account_lockout: AccountLockoutConfig
     rate_limiting: RateLimitingConfig
     captcha: CaptchaConfig
+    totp: TOTPConfig

@@ -14,7 +14,8 @@ class ProtectionResult:
 @dataclass
 class AuthContext:
     user: User
-    captcha_token: str = ""
+    captcha_token: Optional[str] = None
+    totp_code: Optional[str] = None
 
 class Protection(ABC):
     """Abstract base class for password hashing strategies"""

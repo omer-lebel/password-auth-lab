@@ -27,6 +27,10 @@
     "captcha": {
       "enabled": true,
       "max_failed_attempts": 3
+    },
+    "totp": {
+      "enabled": true,
+      "window_size_secs": 60
     }
   }
 }

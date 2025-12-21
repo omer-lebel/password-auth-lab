@@ -5,6 +5,7 @@ from .base import Protection, ProtectionResult, AuthContext
 from .rate_limmiting import RateLimitProtection
 from .account_lockout import AccountLockoutProtection
 from .capcha import CaptchaProtection
+from .totp import TOTPProtection
 
 
 class ProtectionManager:
@@ -12,6 +13,7 @@ class ProtectionManager:
         self.protections: List[Protection] = []
         self.group_seed = group_seed
         self.captcha = None
+        self.totp = None
 
         if conf.account_lockout.enabled:
             self.protections.append(AccountLockoutProtection(conf.account_lockout))
@@ -23,9 +25,12 @@ class ProtectionManager:
             self.captcha = CaptchaProtection(conf.captcha)
             self.protections.append(self.captcha)
 
+        if conf.totp.enabled:
+            self.totp = TOTPProtection()
+            self.protections.append(self.totp)
 
-    def validate_request(self, user: User, captcha_token: str) -> ProtectionResult:
-        context = AuthContext(user=user,captcha_token=captcha_token)
+    def validate_request(self, user: User, captcha_token: str, totp_code: str) -> ProtectionResult:
+        context = AuthContext(user=user,captcha_token=captcha_token, totp_code=totp_code)
         for protection in self.protections:
             results = protection.validate_request(context)
             if not results.allowed:
@@ -47,4 +52,10 @@ class ProtectionManager:
         if self.captcha is None:
             raise Exception("No captcha available")
         return self.captcha.generate_token(username)
+
+
+    def verify_totp(self, totp_secret, totp_code):
+        if self.totp is None:
+            return True
+        return self.totp.verify(totp_secret, totp_code)
 

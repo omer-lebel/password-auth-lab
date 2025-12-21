@@ -13,6 +13,7 @@ from server.log import AuditConfig, setup_logger
 
 PORT = 8080
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Auth API Server")
     parser.add_argument(
@@ -37,7 +38,6 @@ def configure_app(app: FastAPI, conf: AppConfig) -> None:
 
 
 def main():
-
     args = parse_args()
     conf = AppConfig.from_json(args.config)
 
@@ -45,7 +45,9 @@ def main():
         hash_type=conf.hashing.type,
         pepper_enable=conf.hashing.pepper_enable,
         account_lockout_enable=conf.protection.account_lockout.enabled,
-        rate_limit_enable=conf.protection.rate_limiting.enabled)
+        rate_limit_enable=conf.protection.rate_limiting.enabled,
+        captcha_enable=conf.protection.captcha.enabled,
+        totp_enable=conf.protection.totp.enabled)
 
     log = setup_logger(audit_config, conf.logging.path)
     log.debug(f"configure server with: {conf}")

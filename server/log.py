@@ -9,6 +9,8 @@ class AuditConfig:
     pepper_enable: bool
     account_lockout_enable: bool
     rate_limit_enable: bool
+    captcha_enable: bool
+    totp_enable: bool
 
 
 class AuditJsonSink:

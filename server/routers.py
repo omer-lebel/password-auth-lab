@@ -29,7 +29,7 @@ async def register(
     # Create new user
     hasher: HashProvider = request.app.state.hash_provider
     hashed_pwd = hasher.hash_password(user.password)
-    db_user = User(username=user.username, password=hashed_pwd)
+    db_user = User(username=user.username, password=hashed_pwd, totp_secret=user.totp_secret)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
@@ -57,7 +57,7 @@ async def login(
         raise HTTPException(status_code=401, detail="Wrong username or password")
 
     # check if user currently block
-    result: ProtectionResult = protections.validate_request(db_user, user.captcha_token)
+    result: ProtectionResult = protections.validate_request(user=db_user, captcha_token=user.captcha_token, totp_code=user.totp_code)
     if not result.allowed:
         request.state.failure_reason = result.reason
         raise HTTPException(status_code=result.status_code, detail=result.user_msg)
@@ -71,7 +71,11 @@ async def login(
         raise HTTPException(status_code=401, detail="Wrong username or password")
 
     # verify totp if needed
-
+    if not protections.verify_totp(db_user.totp_secret, user.totp_code):
+        protections.record_failure(db_user)
+        session.commit()
+        request.state.failure_reason = "Invalid TOTP"
+        raise HTTPException(status_code=401, detail="Invalid TOTP code")
 
 
     protections.reset(db_user)
