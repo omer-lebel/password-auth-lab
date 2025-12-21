@@ -52,14 +52,15 @@ def login(
     # Find user
     query = select(User).where(User.username == user.username)
     db_user = session.exec(query).first()
+    request.state.username = user.username
     if not db_user:
-        log.audit(username=user.username, success=False, reason="User not found")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        request.state.failure_reason = "Unknown username"
+        raise HTTPException(status_code=401, detail="Wrong username or password")
 
     # check if user currently block
     result: ProtectionResult = protections.validate_request(db_user)
     if not result.allowed:
-        log.audit(username=user.username, success=False, reason=result.reason)
+        request.state.failure_reason = result.reason
         raise HTTPException(status_code=result.status_code, detail=result.user_msg)
 
     # Verify password
@@ -67,10 +68,9 @@ def login(
     if not hasher.verify_password(user.password, db_user.password):
         protections.record_failure(db_user)
         session.commit()
-        log.audit(username=user.username, success=False, reason="Wrong password")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        request.state.failure_reason = "Wrong password"
+        raise HTTPException(status_code=401, detail="Wrong username or password")
 
     protections.reset(db_user)
     session.commit()
-    log.audit(username=user.username, success=True, reason="success")
     return {"message": f"Login successful, welcome back {db_user.username}"}

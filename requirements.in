@@ -15,12 +15,14 @@ sqlmodel
 # --------------------------
 passlib[bcrypt]
 bcrypt==4.0.1
+argon2-cffi
 
 # --------------------------
 #  Config + Logging
 # --------------------------
 pydantic-settings
 loguru
+psutil
 
 # --------------------------
 #  attacker

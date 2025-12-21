@@ -22,18 +22,22 @@ class AuditJsonSink:
         data = {
             "timestamp": r["time"].strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
 
+
             # Global config
             "hash_type": self.conf.hash_type,
-            "pepper_enable": self.conf.pepper_enable,
-            "account_lockout_enable": self.conf.account_lockout_enable,
-            "rate_limit_enable": self.conf.rate_limit_enable,
+            "pepper": self.conf.pepper_enable,
+            "account_lockout": self.conf.account_lockout_enable,
+            "rate_limit": self.conf.rate_limit_enable,
 
             # Per-request (dynamic) fields
             "username": r["extra"].get("username"),
             "success": r["extra"].get("success"),
+            "failure_reason": r["message"],
 
-            # The message itself becomes failure_reason or success_reason
-            "failure_reason": r["message"]
+            # Metrics from middleware
+            "latency_ms": r["extra"].get("latency_ms"),
+            "cpu_usage_ms": r["extra"].get("cpu_usage_ms"),
+            "memory_delta_mb": r["extra"].get("memory_delta_mb"),
         }
 
         with open(self.filename, "a") as f:
@@ -41,12 +45,15 @@ class AuditJsonSink:
 
 
 
-def audit(username: str, success: bool, reason: str = "") -> None:
+def audit(username: str, success: bool, reason: str = "", latency_ms: float = 0.0,
+          cpu_usage_ms: float = 0.0, memory_delta_mb: float = 0.0) -> None:
     logger.bind(
         username=username,
         success=success,
+        latency_ms=latency_ms,
+        cpu_usage_ms=cpu_usage_ms,
+        memory_delta_mb=memory_delta_mb
     ).log("AUDIT", reason)
-
 
 def setup_logger(audit_config : AuditConfig, audit_filename: str = "attempt.jsonl"):
     logger.remove()

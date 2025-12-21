@@ -4,10 +4,11 @@ from fastapi.responses import RedirectResponse
 import uvicorn
 
 from server.protection.protection_manager import ProtectionManager
+from server.middlewares import AuditMiddleware
 from server.routers import router
-from server.config.config import AppConfig, HashingConfig
+from server.config.config import AppConfig
 from server.database import create_db_and_tables
-from server.hashing import HashProvider, HashProviderFactory
+from server.hashing import HashProviderFactory
 from server.log import AuditConfig, setup_logger
 
 PORT = 8080
@@ -27,6 +28,7 @@ def configure_app(app: FastAPI, conf: AppConfig) -> None:
     create_db_and_tables()
     app.state.hash_provider = HashProviderFactory(conf.hashing, conf.PEPPER).create()
     app.state.protection_mng = ProtectionManager(conf.protection)
+    app.add_middleware(AuditMiddleware)
     app.include_router(router)
 
     @app.get("/")
