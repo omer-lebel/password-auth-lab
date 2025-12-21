@@ -12,7 +12,7 @@ log = get_logger()
 class AuditMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        if request.url.path in ["/register"]:
+        if request.url.path not in ["/login"]:
             return await call_next(request)
 
         # record before request
