@@ -11,13 +11,16 @@ from server.config.schema import HashingConfig, HashType
 
 class HashProviderFactory:
     def __init__(self, conf: HashingConfig, pepper: Optional[str]):
-        if conf.pepper_enable:
+        self.conf = conf
+
+        if not conf.pepper_enable:
+            log.info(f"pepper is not enable")
+            self.pepper = ""
+        else:
             if pepper is None or pepper == "":
                 raise RuntimeError("PEPPER environment variable is not set")
             log.info(f"PEPPER environment variable: {pepper}")
-
-        self.conf = conf
-        self.pepper = pepper
+            self.pepper = pepper
 
     def create(self) -> HashProvider:
         providers = {

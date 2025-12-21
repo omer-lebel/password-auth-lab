@@ -39,13 +39,14 @@ def main():
     args = parse_args()
     conf = AppConfig.from_json(args.config)
 
-    audit_config = AuditConfig(conf.hashing.type,
-                conf.hashing.pepper_enable,
-                conf.protection.account_lockout.enabled,
-                conf.protection.rate_limiting.enabled)
+    audit_config = AuditConfig(
+        hash_type=conf.hashing.type,
+        pepper_enable=conf.hashing.pepper_enable,
+        account_lockout_enable=conf.protection.account_lockout.enabled,
+        rate_limit_enable=conf.protection.rate_limiting.enabled)
 
     log = setup_logger(audit_config, conf.logging.path)
-    log.debug(f"configure server with: {AuditConfig}")
+    log.debug(f"configure server with: {conf}")
 
     app = FastAPI(title="Auth API")
 
