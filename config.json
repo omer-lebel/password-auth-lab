@@ -1,12 +1,6 @@
 {
   "group_seed": 509041496,
-  "database": {
-    "path": "sqlite:///database.db"
-  },
-  "logging": {
-    "path": "attempt.jsonl",
-    "level": "INFO"
-  },
+  "log_level": "DEBUG",
   "hashing": {
     "type": "bcrypt",
     "pepper_enable" : false,
