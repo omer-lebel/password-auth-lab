@@ -1,20 +1,30 @@
 {
-  "database": {
-    "path": "sqlite:///database.db"
-  },
-  "logging": {
-    "path": "attempt.jsonl",
-    "level": "INFO"
-  },
+  "group_seed": 509041496,
+  "log_level": "DEBUG",
   "hashing": {
-    "type": "debug",
+    "type": "bcrypt",
+    "pepper_enable" : false,
     "bcrypt_params": { "cost": 12 },
     "argon2_params": { "time": 1, "memory": 131072, "parallelism": 4 }
   },
   "protection": {
-    "pepper": {
+    "account_lockout": {
+      "enabled": false,
+      "max_failed_attempts": 10
+    },
+    "rate_limiting": {
+      "enabled": false,
+      "window_seconds": 60,
+      "max_attempt_per_time": 10,
+      "initial_lock_second": 30
+    },
+    "captcha": {
       "enabled": true,
-      "secret": "secret"
+      "max_failed_attempts": 3
+    },
+    "totp": {
+      "enabled": false,
+      "max_drift_seconds": 30
     }
   }
 }

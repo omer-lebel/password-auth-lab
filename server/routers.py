@@ -1,24 +1,21 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import Session, select
+from zxcvbn import zxcvbn
 
-from server.models import UserCredentials
-from server.database import get_session, User
+from server.log import get_logger
+from server.schema import UserRegister, UserLogin
+from server.database import db_manager, User
 from server.hashing import HashProvider
+from server.protection import ProtectionManager, ProtectionResult
+
 
 router = APIRouter(tags=["auth"])
-
-def get_hash_provider_dependency(request: Request):
-    return request.app.state.hash_provider
-
-def get_logger_dependency(request: Request):
-    return request.app.state.logger
+log = get_logger()
 
 @router.post("/register")
 def register(
-        user: UserCredentials,
-        session: Session = Depends(get_session),
-        log = Depends(get_logger_dependency),
-        hasher: HashProvider = Depends(get_hash_provider_dependency),
+        user: UserRegister,
+        session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
     client_ip = request.client.host
@@ -31,39 +28,88 @@ def register(
         raise HTTPException(status_code=400, detail="Username already taken")
 
     # Create new user
+    hasher: HashProvider = request.app.state.hash_provider
     hashed_pwd = hasher.hash_password(user.password)
-    db_user = User(username=user.username, password=hashed_pwd)
+    password_score = _classify_strength(user.password)
+    db_user = User(username=user.username, password=hashed_pwd, password_score=password_score, totp_secret=user.totp_secret)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
 
-    log.debug(f"{client_ip} registration success")
+    log.debug(f"{client_ip} registration success: username '{user.username}' - password score [{password_score}]")
     return {"message": f"Register successful, welcome {user.username}" }
 
 
+def _classify_strength(plain_password: str):
+    score = zxcvbn(plain_password)['score']
+    if score <= 1:
+        return "weak"
+    elif score == 2:
+        return "medium"
+    else:
+        return "strong"
+
 
 @router.post("/login")
-def login(
-        user: UserCredentials,
-        session: Session = Depends(get_session),
-        log = Depends(get_logger_dependency),
-        hasher: HashProvider = Depends(get_hash_provider_dependency),
+async def login(
+        user: UserLogin,
+        session: Session = Depends(db_manager.get_session),
         request: Request = None):
-
+    print("inside")
     client_ip = request.client.host
     log.debug(f"{client_ip} request login with username {user.username}")
+    protections: ProtectionManager = request.app.state.protection_mng
 
     # Find user
     query = select(User).where(User.username == user.username)
     db_user = session.exec(query).first()
+    request.state.username = user.username
     if not db_user:
-        log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=False, reason="User not found")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        request.state.failure_reason = "Unknown username"
+        raise HTTPException(status_code=401, detail="Wrong username or password")
+
+    request.state.password_score = db_user.password_score
+    # check if user currently block
+    result: ProtectionResult = protections.validate_request(user=db_user, captcha_token=user.captcha_token, totp_code=user.totp_code)
+    if not result.allowed:
+        request.state.failure_reason = result.reason
+        raise HTTPException(status_code=result.status_code, detail=result.user_msg)
 
     # Verify password
+    hasher: HashProvider = request.app.state.hash_provider
     if not hasher.verify_password(user.password, db_user.password):
-        log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=False, reason="Wrong password")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        protections.record_failure(db_user)
+        session.commit()
+        request.state.failure_reason = "Wrong password"
+        raise HTTPException(status_code=401, detail="Wrong username or password")
 
-    log.audit(ip=client_ip, username=user.username, attempt_count=-1, success=True, reason="success")
+    # verify totp if needed
+    if not protections.verify_totp(db_user.totp_secret, user.totp_code):
+        protections.record_failure(db_user)
+        session.commit()
+        request.state.failure_reason = "Invalid TOTP"
+        raise HTTPException(status_code=401, detail="Invalid TOTP code")
+
+
+    protections.reset(db_user)
+    session.commit()
     return {"message": f"Login successful, welcome back {db_user.username}"}
+
+
+@router.post("/admin/generate_token/{group_seed}")
+async def generate_captcha_token(
+        input_group_seed: int,
+        username: str,
+        session: Session = Depends(db_manager.get_session),
+        request: Request = None):
+
+    protections: ProtectionManager = request.app.state.protection_mng
+
+    # verify user and make sure it has the right group seed
+    query = select(User).where(User.username == username)
+    exist_user = session.exec(query).first()
+    if not exist_user or protections.group_seed != input_group_seed:
+        raise HTTPException(status_code=403, detail="Invalid credentials")
+
+    token = protections.generate_captcha_token(username)
+    return {"captcha_token": token}

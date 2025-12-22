@@ -1,13 +1,17 @@
 from pydantic_settings import BaseSettings
 import json
-from .schema import DatabaseConfig, LoggingConfig, HashingConfig, ProtectionConfig
+from server.config.setting import LogLevel, HashingConfig, ProtectionConfig
 
 
 class AppConfig(BaseSettings):
-    database: DatabaseConfig
-    logging: LoggingConfig
+    group_seed: int
+    log_level: LogLevel
     hashing: HashingConfig
     protection: ProtectionConfig
+
+    PEPPER: str | None = None
+    class Config:
+        env_file = "server/.env"
 
     @classmethod
     def from_json(cls, file_path: str) -> "AppConfig":

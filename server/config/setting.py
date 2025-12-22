@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
-from enum import Enum
+from enum import StrEnum
 
 
 # -------------------------- Enums --------------------------
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -11,22 +11,11 @@ class LogLevel(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-class HashType(str, Enum):
+class HashType(StrEnum):
     BCRYPT = "bcrypt"
     ARGON2 = "argon2"
     SHA256 = "sha256"
     DEBUG = "debug"
-
-
-# -------------------------- database --------------------------
-class DatabaseConfig(BaseModel):
-    path: str
-
-
-# -------------------------- logging --------------------------
-class LoggingConfig(BaseModel):
-    path: str
-    level: LogLevel = LogLevel.INFO
 
 
 # -------------------------- hashing --------------------------
@@ -40,14 +29,33 @@ class HashingConfig(BaseModel):
         parallelism: int = Field(ge=1)
 
     type: HashType
+    pepper_enable: bool
     bcrypt_params: BcryptParams = Field(default_factory=BcryptParams)
     argon2_params: Argon2Params = Field(default_factory=Argon2Params)
 
 
 # -------------------------- protection --------------------------
-class ProtectionConfig(BaseModel):
-    class PepperConfig(BaseModel):
-        enabled: bool = True
-        secret: str = Field(min_length=1)
+class AccountLockoutConfig(BaseModel):
+    enabled: bool
+    max_failed_attempts: int = Field(ge=1)
 
-    pepper: PepperConfig
+class RateLimitingConfig(BaseModel):
+    enabled: bool
+    window_seconds: int = Field(ge=1)
+    max_attempt_per_time: int = Field(ge=1)
+    initial_lock_second: int = Field(ge=1)
+
+class CaptchaConfig(BaseModel):
+    enabled: bool
+    max_failed_attempts: int = Field(ge=1)
+
+class TOTPConfig(BaseModel):
+    enabled: bool
+    max_drift_seconds: int = Field(ge=1)
+
+
+class ProtectionConfig(BaseModel):
+    account_lockout: AccountLockoutConfig
+    rate_limiting: RateLimitingConfig
+    captcha: CaptchaConfig
+    totp: TOTPConfig
