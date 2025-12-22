@@ -23,15 +23,15 @@ class CaptchaProtection(Protection):
 
         if stored_token is None:
             log.debug(f"No captcha token for {username}")
-            return ProtectionResult(allowed=False, user_msg = "required captcha", reason="Captcha wasn't generated", status_code=403)
+            return ProtectionResult(allowed=False, user_msg = "required captcha", reason="captcha", status_code=403)
 
         if input_token is None:
             log.debug(f"User {username} didn't provided a captcha token")
-            return ProtectionResult(allowed=False, user_msg = "required captcha", reason="Captcha wasn't provided", status_code=403)
+            return ProtectionResult(allowed=False, user_msg = "required captcha", reason="captcha", status_code=403)
 
         if input_token != stored_token:
             log.debug(f"User {username} provided Invalid captcha token, expected {stored_token}")
-            return ProtectionResult(allowed=False, user_msg = "Invalid captcha token", reason="Captcha is invalid", status_code=403)
+            return ProtectionResult(allowed=False, user_msg = "Invalid captcha token", reason="captcha", status_code=403)
 
         return ProtectionResult(allowed=True)
 
