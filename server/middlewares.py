@@ -9,6 +9,7 @@ from server.log import get_logger
 
 log = get_logger()
 
+
 class AuditMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
@@ -28,14 +29,14 @@ class AuditMiddleware(BaseHTTPMiddleware):
         latency_ms = (time.perf_counter() - start_time) * 1000
         memory_delta_mb = process.memory_info().rss / 1024 / 1024 - memory_start
         cpu_usage_ms = (process.cpu_times().user + process.cpu_times().system) - cpu_start
-        username = request.state.username
         is_success = response.status_code == HTTPStatus.OK
         reason = "success" if is_success else request.state.failure_reason
 
         log.audit(
-            username= username,
-            success= is_success,
-            reason= reason,
+            username=request.state.username,
+            password_score=getattr(request.state, "password_score", "N/A"),
+            success=is_success,
+            reason=reason,
             latency_ms=round(latency_ms, 3),
             cpu_usage_ms=round(cpu_usage_ms, 6),
             memory_delta_mb=round(memory_delta_mb, 3)

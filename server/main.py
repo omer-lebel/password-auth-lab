@@ -44,7 +44,7 @@ def setup_output_directory(output_dir: str) -> Path:
 
 def copy_config_file_to_output_dir(config_src: str, output_dir: Path, log):
     try:
-        src_path = Path(config_src)
+        src_path = Path(config_src).resolve()
         dest_path = output_dir / src_path.name
 
         if src_path == dest_path:

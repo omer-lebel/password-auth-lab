@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlmodel import Session, select
+from zxcvbn import zxcvbn
 
 from server.log import get_logger
 from server.schema import UserRegister, UserLogin
@@ -29,13 +30,24 @@ def register(
     # Create new user
     hasher: HashProvider = request.app.state.hash_provider
     hashed_pwd = hasher.hash_password(user.password)
-    db_user = User(username=user.username, password=hashed_pwd, totp_secret=user.totp_secret)
+    password_score = _classify_strength(user.password)
+    db_user = User(username=user.username, password=hashed_pwd, password_score=password_score, totp_secret=user.totp_secret)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
 
-    log.debug(f"{client_ip} registration success")
+    log.debug(f"{client_ip} registration success: username '{user.username}' - password score [{password_score}]")
     return {"message": f"Register successful, welcome {user.username}" }
+
+
+def _classify_strength(plain_password: str):
+    score = zxcvbn(plain_password)['score']
+    if score <= 1:
+        return "weak"
+    elif score == 2:
+        return "medium"
+    else:
+        return "strong"
 
 
 @router.post("/login")
@@ -43,7 +55,7 @@ async def login(
         user: UserLogin,
         session: Session = Depends(db_manager.get_session),
         request: Request = None):
-
+    print("inside")
     client_ip = request.client.host
     log.debug(f"{client_ip} request login with username {user.username}")
     protections: ProtectionManager = request.app.state.protection_mng
@@ -56,6 +68,7 @@ async def login(
         request.state.failure_reason = "Unknown username"
         raise HTTPException(status_code=401, detail="Wrong username or password")
 
+    request.state.password_score = db_user.password_score
     # check if user currently block
     result: ProtectionResult = protections.validate_request(user=db_user, captcha_token=user.captcha_token, totp_code=user.totp_code)
     if not result.allowed:

@@ -80,3 +80,5 @@ urllib3==2.6.2
     # via requests
 uvicorn==0.40.0
     # via -r requirements.in
+zxcvbn-python==4.4.24
+    # via -r requirements.in

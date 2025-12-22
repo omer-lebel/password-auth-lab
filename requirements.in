@@ -24,6 +24,7 @@ pyotp
 pydantic-settings
 loguru
 psutil
+zxcvbn-python
 
 # --------------------------
 #  attacker

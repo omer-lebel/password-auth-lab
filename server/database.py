@@ -13,7 +13,6 @@ class DatabaseManager:
 
         self.engine = create_engine(database_url, echo=False)
         SQLModel.metadata.create_all(self.engine)
-        print(f"--- Database initialized at: {db_path} ---")
 
     def get_session(self) -> Generator[Session, None, None]:
         if not self.engine:
@@ -29,6 +28,7 @@ class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True})
     username: str = Field(index=True, unique=True)
     password: str
+    password_score: str
 
     # account lockout + captcha
     failed_attempts: int = 0

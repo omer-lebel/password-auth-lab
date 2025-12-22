@@ -41,6 +41,7 @@ class AuditJsonSink:
 
             # per-request fields (dynamic)
             "username": r["extra"].get("username"),
+            "password_score": r["extra"].get("password_score"),
             "success": r["extra"].get("success"),
             "failure_reason": r["message"],
 
@@ -56,10 +57,11 @@ class AuditJsonSink:
                 self._file.close()
 
 
-def audit(username: str, success: bool, reason: str = "", latency_ms: float = 0.0,
-          cpu_usage_ms: float = 0.0, memory_delta_mb: float = 0.0) -> None:
+def audit(username: str, password_score: str, success: bool, reason: str, latency_ms: float,
+          cpu_usage_ms: float, memory_delta_mb: float) -> None:
     logger.bind(
         username=username,
+        password_score = password_score,
         success=success,
         latency_ms=latency_ms,
         cpu_usage_ms=cpu_usage_ms,
