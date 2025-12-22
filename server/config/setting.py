@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
-from enum import Enum
+from enum import StrEnum
 
 
 # -------------------------- Enums --------------------------
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -11,22 +11,11 @@ class LogLevel(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-class HashType(str, Enum):
+class HashType(StrEnum):
     BCRYPT = "bcrypt"
     ARGON2 = "argon2"
     SHA256 = "sha256"
     DEBUG = "debug"
-
-
-# -------------------------- database --------------------------
-class DatabaseConfig(BaseModel):
-    path: str
-
-
-# -------------------------- logging --------------------------
-class LoggingConfig(BaseModel):
-    path: str
-    level: LogLevel = LogLevel.INFO
 
 
 # -------------------------- hashing --------------------------
@@ -63,6 +52,7 @@ class CaptchaConfig(BaseModel):
 class TOTPConfig(BaseModel):
     enabled: bool
     max_drift_seconds: int = Field(ge=1)
+
 
 class ProtectionConfig(BaseModel):
     account_lockout: AccountLockoutConfig

@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 
 from server.log import get_logger
 from server.schema import UserRegister, UserLogin
-from server.database import get_session, User
+from server.database import db_manager, User
 from server.hashing import HashProvider
 from server.protection import ProtectionManager, ProtectionResult
 
@@ -12,9 +12,9 @@ router = APIRouter(tags=["auth"])
 log = get_logger()
 
 @router.post("/register")
-async def register(
+def register(
         user: UserRegister,
-        session: Session = Depends(get_session),
+        session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
     client_ip = request.client.host
@@ -41,7 +41,7 @@ async def register(
 @router.post("/login")
 async def login(
         user: UserLogin,
-        session: Session = Depends(get_session),
+        session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
     client_ip = request.client.host
@@ -87,7 +87,7 @@ async def login(
 async def generate_captcha_token(
         input_group_seed: int,
         username: str,
-        session: Session = Depends(get_session),
+        session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
     protections: ProtectionManager = request.app.state.protection_mng

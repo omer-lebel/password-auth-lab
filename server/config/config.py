@@ -1,12 +1,11 @@
 from pydantic_settings import BaseSettings
 import json
-from server.config.setting import DatabaseConfig, LoggingConfig, HashingConfig, ProtectionConfig
+from server.config.setting import LogLevel, HashingConfig, ProtectionConfig
 
 
 class AppConfig(BaseSettings):
     group_seed: int
-    database: DatabaseConfig
-    logging: LoggingConfig
+    log_level: LogLevel
     hashing: HashingConfig
     protection: ProtectionConfig
 

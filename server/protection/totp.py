@@ -4,7 +4,7 @@ import pyotp
 from .base import Protection, ProtectionResult, AuthContext
 from server.log import logger as log
 from server.database import User
-from server.config.setting import TOTPConfig
+from server.config import TOTPConfig
 
 
 class TOTPProtection(Protection):

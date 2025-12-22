@@ -1,10 +1,9 @@
 import time
-import json
 
 from server.log import logger as log
 from .base import Protection, ProtectionResult, AuthContext
 from server.database import User
-from server.config.setting import RateLimitingConfig
+from server.config import RateLimitingConfig
 
 
 class RateLimitProtection(Protection):

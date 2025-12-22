@@ -1,5 +1,5 @@
 from typing import List
-from server.config.setting import ProtectionConfig
+from server.config import ProtectionConfig
 from server.database import User
 from .base import Protection, ProtectionResult, AuthContext
 from .rate_limmiting import RateLimitProtection

@@ -6,7 +6,7 @@ from .argon2 import Argon2HashProvider
 from .sha256 import Sha256HashProvider
 from .plain_text import PlainTextProvider
 from server.log import logger as log
-from server.config.setting import HashingConfig, HashType
+from server.config import HashingConfig, HashType
 
 
 class HashProviderFactory:

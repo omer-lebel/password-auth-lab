@@ -7,17 +7,20 @@
 git clone git@github.com:omer-lebel/password-auth-lab.git
 cd password-auth-lab
 ```
-### 2. Install dependencies:
+### 2. Setup Environment:
 ```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 ### 3. Run the server
 ```bash
-cd password-auth-lab
-python -m server.main
-```
 
+python -m server.main --config=<path_to_config.json> --output=<outputdir>
+```
+* `--config` - Path to config JSON file (default: config.json)
+* `--output` -  Output directory for database, logs, and config copy
 ---
 
 ## 📦 Adding New Dependencies

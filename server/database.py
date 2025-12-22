@@ -1,10 +1,29 @@
+from pathlib import Path
 from sqlmodel import SQLModel, Session, Field, create_engine, JSON
 from typing import Generator, Optional, List
 
-DATABASE_URL = "sqlite:///database.db"
-engine = create_engine(DATABASE_URL)
 
-# model for db
+class DatabaseManager:
+    def __init__(self):
+        self.engine = None
+
+    def initialize(self, output_dir: Path):
+        db_path = output_dir / "database.db"
+        database_url = f"sqlite:///{db_path.absolute().as_posix()}"
+
+        self.engine = create_engine(database_url, echo=False)
+        SQLModel.metadata.create_all(self.engine)
+        print(f"--- Database initialized at: {db_path} ---")
+
+    def get_session(self) -> Generator[Session, None, None]:
+        if not self.engine:
+            raise RuntimeError("Database must be initialized before getting a session.")
+
+        with Session(self.engine) as session:
+            yield session
+
+
+# -------------------- table model --------------------
 class User(SQLModel, table=True):
     # Identity
     id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True})
@@ -26,10 +45,4 @@ class User(SQLModel, table=True):
     # totp
     totp_secret: Optional[str] = None
 
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-def get_session() -> Generator[Session, None, None]:
-    with Session(engine) as session:
-        yield session
+db_manager = DatabaseManager()

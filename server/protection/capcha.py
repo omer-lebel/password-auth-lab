@@ -3,7 +3,7 @@ import secrets
 from .base import Protection, ProtectionResult, AuthContext
 from server.log import logger as log
 from server.database import User
-from server.config.setting import CaptchaConfig
+from server.config import CaptchaConfig
 
 class CaptchaProtection(Protection):
 
