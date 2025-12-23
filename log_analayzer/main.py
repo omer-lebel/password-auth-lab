@@ -94,18 +94,16 @@ class SecurityAnalyzer:
         config_lines = ["EXPERIMENT CONFIGURATION",
                         separator,
                         "• Group Seed: 509041496",
-                        f"• Hash Type: {str(row.get('hash_type','N/A'))}"
+                        f"• Hash Type: {str(row.get('hash_type', 'N/A'))}"
                         f"\n\nProtections:"]
 
         for _, display_name in self.active_defenses:
             config_lines.append(f"• {display_name:<28}")
             if not self.active_defenses: config_lines.append("• No active defenses detected")
 
-
         ax.text(0.05, 0.95, "\n".join(config_lines), transform=ax.transAxes, family='monospace', fontsize=7, va='top',
-            ha='left', linespacing=1.4,
-            bbox=dict(facecolor='#f0f3ff', edgecolor='#74b9ff', boxstyle='round,pad=1', alpha=0.8))
-
+                ha='left', linespacing=1.4,
+                bbox=dict(facecolor='#f0f3ff', edgecolor='#74b9ff', boxstyle='round,pad=1', alpha=0.8))
 
     def _plot_sucess_pie_charts(self, fig, pos_base):
         attack_df = self.get_attack_metrics()
@@ -127,7 +125,8 @@ class SecurityAnalyzer:
             ax.set_title(cat.capitalize(), fontsize=8, pad=5, fontweight='semibold')
 
         desc_y, legend_y = pos_base[1] - 0.005, pos_base[1] - 0.025
-        fig.text(pos_base[0] + 0.14, desc_y, 'Percentage of accounts compromised per category', fontsize=7, color='gray',
+        fig.text(pos_base[0] + 0.14, desc_y, 'Percentage of accounts compromised per category', fontsize=7,
+                 color='gray',
                  ha='center', style='italic')
         for label, color, offset in [('Breached', 'Success', 0.06), ('Protected', 'Fail', 0.16)]:
             fig.patches.append(
@@ -135,12 +134,12 @@ class SecurityAnalyzer:
                               transform=fig.transFigure))
             fig.text(pos_base[0] + offset + 0.015, legend_y + 0.002, label, fontsize=7, va='bottom')
 
-
     def _plot_avg_login_attempts(self, ax):
         attack_df = self.get_attack_metrics()
         if attack_df.empty: return
         order = ['weak', 'medium', 'strong']
-        summary = attack_df.groupby(['strength', 'success'])['attempts'].mean().unstack(fill_value=0).reindex(order).fillna(
+        summary = attack_df.groupby(['strength', 'success'])['attempts'].mean().unstack(fill_value=0).reindex(
+            order).fillna(
             0)
         for col in [True, False]:
             if col not in summary.columns: summary[col] = 0
@@ -157,40 +156,72 @@ class SecurityAnalyzer:
             for b in r:
                 h = b.get_height()
                 if h > 0: ax.annotate(f'{h:.1f}', xy=(b.get_x() + b.get_width() / 2, h), xytext=(0, 3),
-                                      textcoords="offset points", ha='center', va='bottom', fontsize=7, fontweight='bold')
+                                      textcoords="offset points", ha='center', va='bottom', fontsize=7,
+                                      fontweight='bold')
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2, fontsize=8, frameon=True)
         sns.despine(ax=ax)
 
+    # def _plot_failure_reason(self, ax):
+    #     failed = self.df[self.df['success'] == False]
+    #     if failed.empty: return
+    #
+    #     # יצירת הגרף
+    #     sns.countplot(ax=ax, data=failed, x='failure_reason', palette='viridis',
+    #                   hue='failure_reason', legend=False)
+    #
+    #     ax.set_title('Blocking Factors', fontweight='bold', pad=15)
+    #     ax.set_xlabel('')
+    #     ax.set_ylabel('Count', fontweight='bold')
+    #
+    #     # label on the
+    #     plt.setp(ax.get_xticklabels(), rotation=30, ha='right', fontsize=8)  # הגדלת גודל הגופן
+    #     ax.tick_params(axis='x', pad=3)
+    #
+    #     # amount and precent
+    #     total_failed = len(failed)
+    #     for p in ax.patches:
+    #         h = p.get_height()
+    #         if h > 0:
+    #             ax.annotate(f'{int(h)}\n({(h / total_failed) * 100:.1f}%)',
+    #                         (p.get_x() + p.get_width() / 2., h),
+    #                         ha='center', va='bottom', fontsize=7,
+    #                         fontweight='bold', xytext=(0, 5),
+    #                         textcoords='offset points')
+    #
+    #     sns.despine(ax=ax)
 
-    def _plot_failure_reason(self, ax):
+    def _plot_blocking_factor(self, ax):
         failed = self.df[self.df['success'] == False]
-        if failed.empty: return
+        if failed.empty:
+            ax.text(0.5, 0.5, 'No Failures Recorded', ha='center', va='center')
+            ax.axis('off')
+            return
 
-        # יצירת הגרף
-        sns.countplot(ax=ax, data=failed, x='failure_reason', palette='viridis',
-                      hue='failure_reason', legend=False)
+        failure_counts = failed['failure_reason'].value_counts()
+        colors = sns.color_palette("husl", len(failure_counts))
 
-        ax.set_title('Blocking Factors', fontweight='bold', pad=15)
-        ax.set_xlabel('')
-        ax.set_ylabel('Count', fontweight='bold')
+        wedges, texts, autotexts = ax.pie(
+            failure_counts,
+            autopct='%1.1f%%',
+            startangle=140,
+            colors=colors,
+            pctdistance=0.75,
+            wedgeprops={'edgecolor': 'white', 'linewidth': 0.8, 'alpha': 0.9}
+        )
 
-        # label on the
-        plt.setp(ax.get_xticklabels(), rotation=30, ha='right', fontsize=8)  # הגדלת גודל הגופן
-        ax.tick_params(axis='x', pad=3)
+        plt.setp(autotexts, size=7, fontweight="bold", color="black")
 
-        # amount and precent
-        total_failed = len(failed)
-        for p in ax.patches:
-            h = p.get_height()
-            if h > 0:
-                ax.annotate(f'{int(h)}\n({(h / total_failed) * 100:.1f}%)',
-                            (p.get_x() + p.get_width() / 2., h),
-                            ha='center', va='bottom', fontsize=7,
-                            fontweight='bold', xytext=(0, 5),
-                            textcoords='offset points')
-
-        sns.despine(ax=ax)
-
+        ax.legend(
+            wedges,
+            failure_counts.index,
+            title="Failure Reasons",
+            loc="center left",
+            bbox_to_anchor=(0.95, 0, 0.5, 1),
+            fontsize=8,
+            frameon=True
+        )
+        ax.set_title('Blocking Factors Distribution', fontweight='bold', pad=15)
+        ax.axis('equal')
 
     def _plot_requests_over_time(self, ax):
         df_sorted = self.df.sort_values('timestamp')
@@ -211,7 +242,6 @@ class SecurityAnalyzer:
         d = dict(zip(l, h))
         ax.legend(d.values(), d.keys(), fontsize=8, loc='upper left', frameon=True)
         plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
-
 
     def _add_empty_box_border(self, ax):
         ax.set_xticks([]);
@@ -237,10 +267,10 @@ class SecurityAnalyzer:
 
         # -lower graph
         gs = fig.add_gridspec(2, 2, left=0.1, right=0.9, bottom=0.08, top=0.68, hspace=0.5, wspace=0.35)
-        self._plot_avg_login_attempts(fig.add_subplot(gs[0, 0]))
+        self._plot_avg_login_attempts(fig.add_subplot(gs[1, 1]))
         self._add_empty_box_border(fig.add_subplot(gs[0, 1]))
         self._plot_requests_over_time(fig.add_subplot(gs[1, 0]))
-        self._plot_failure_reason(fig.add_subplot(gs[1, 1]))
+        self._plot_blocking_factor(fig.add_subplot(gs[0, 0]))
 
         with PdfPages(pdf_path) as pdf:
             pdf.savefig(fig, bbox_inches='tight')
