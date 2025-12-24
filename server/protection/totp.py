@@ -20,7 +20,7 @@ class TOTPProtection(Protection):
         if context.user.totp_secret and not context.totp_code:
             return ProtectionResult(
                 allowed=False,
-                reason="TOTP code missing",
+                reason="totp",
                 user_msg="This account requires a TOTP code. Please provide it.",
                 status_code=401
             )

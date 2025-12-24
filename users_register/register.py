@@ -7,7 +7,7 @@ from pathlib import Path
 #                        Configuration
 # ============================================================
 URL = "http://localhost:8080/register"
-USERS_FILE = Path("users.json")
+USERS_FILE = Path("../users.json")
 LOG_FILE = "register.log"
 
 # ============================================================
