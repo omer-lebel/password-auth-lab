@@ -4,9 +4,7 @@ CAPTCHA_URL = "http://localhost:8080/admin/generate_token"
 GROUP_SEED = 509041496
 
 #============== Attacks To Apply =====================#
-APPLY_PASSWORD_SPRAY = False
-APPLY_BRUTE_FORCE = True
-USER_TO_BRUTE_FORCE = "david"
+USER_TO_BRUTE_FORCE = "omer"
 
 #============== Files =====================#
 USERS_FILE = "users.txt"
