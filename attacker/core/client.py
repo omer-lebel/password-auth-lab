@@ -1,3 +1,4 @@
+import sys
 import requests
 class HttpClient:
     def __init__(self, url,captcha_url,group_seed,timeout):
@@ -29,10 +30,12 @@ class HttpClient:
 
         except requests.exceptions.ConnectionError:
             print("[ERROR] Connection error ,is the server running?")
+            sys.exit(1)
             return None
 
         except Exception as e:
-            raise(f"[ERROR] Unexpected request error: {e}")
+            print(f"[ERROR] Unexpected request error: {e}")
+            sys.exit(1)
             return None
 
     def handle_captcha(self, username):
