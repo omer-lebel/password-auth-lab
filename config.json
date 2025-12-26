@@ -24,7 +24,8 @@
     },
     "totp": {
       "enabled": false,
-      "max_drift_seconds": 30
+      "max_drift_seconds": 30,
+      "pending_totp_minutes" : 3
     }
   }
 }

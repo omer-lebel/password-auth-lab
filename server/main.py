@@ -7,7 +7,7 @@ import uvicorn
 
 from server.protection import ProtectionManager
 from server.middlewares import AuditMiddleware
-from server.routers import router
+from server.routers import login_router, register_router, generate_captcha_token_router, login_totp_router
 from server.config import AppConfig
 from server.database import db_manager
 from server.hashing import HashProviderFactory
@@ -60,7 +60,11 @@ def configure_app(app: FastAPI, conf: AppConfig) -> None:
     app.state.hash_provider = HashProviderFactory(conf=conf.hashing, pepper=conf.PEPPER).create()
     app.state.protection_mng = ProtectionManager(conf=conf.protection, group_seed=conf.group_seed)
     app.add_middleware(AuditMiddleware)
-    app.include_router(router)
+
+    app.include_router(register_router)
+    app.include_router(login_router)
+    app.include_router(login_totp_router)
+    app.include_router(generate_captcha_token_router)
 
     @app.get("/")
     def read_root():

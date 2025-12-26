@@ -23,7 +23,7 @@ class RateLimitProtection(Protection):
             remaining = user.lockout_until - now
             m = int(remaining // 60)
             s = int(remaining % 60)
-            log.debug(f"Rate limit active for user '{user.username}' "
+            log.debug(f"{user.username:<10} | Rate limit active' "
                       f"(remaining time={int(remaining)}s | lockout_count={user.lockout_count})")
 
             return ProtectionResult(
@@ -46,7 +46,7 @@ class RateLimitProtection(Protection):
         attempts = [ts for ts in user.rate_attempts if now - ts < self.window_seconds]
         attempts.append(now)
         user.rate_attempts = attempts
-        log.debug(f"attempts in last {self.window_seconds}s: {len(attempts)}/{self.max_attempts}")
+        log.debug(f"{user.username:<10} | attempts in last {self.window_seconds}s: {len(attempts)}/{self.max_attempts}")
 
         #  Check if exceeded rate limit
         if len(attempts) >= self.max_attempts:
@@ -54,7 +54,7 @@ class RateLimitProtection(Protection):
             user.lockout_until = int(now + lock_time)
             user.lockout_count += 1
             user.rate_attempts = []
-            log.debug(f"User '{user.username}' EXCEEDED rate limit. Locking for {lock_time}s (lockout_count={user.lockout_count})")
+            log.debug(f"{user.username:<10} | EXCEEDED rate limit. Locking for {lock_time}s (lockout_count={user.lockout_count})")
 
     def reset(self, user: User) -> None:
         user.rate_attempts = []

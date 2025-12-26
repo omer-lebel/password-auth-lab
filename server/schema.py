@@ -1,32 +1,24 @@
-import base64
-from pydantic import field_validator, validator
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Field
 from typing import Optional
 
 # schema of http body
-
 class UserRegister(SQLModel):
-    username: str
-    password: str
-    totp_secret: Optional[str] = None
-
-
-    @field_validator('totp_secret')
-    @classmethod
-    def validate_base32_secret(cls, v: Optional[str]) -> Optional[str]:
-        if v is None or v == "":
-            return v
-        try:
-            base64.b32decode(v, casefold=True)
-            return v
-        except Exception:
-            raise ValueError('TOTP secret must be a valid Base32 string (A-Z, 2-7)')
+    username: str = Field(min_length=3, max_length=20, description="Username must be 3-20 chars")
+    password: str = Field(min_length=3, max_length=20, description="Password must be 3-20 chars")
+    totp_secret: Optional[str] = Field(default=None,min_length=32, max_length=32,
+                                       description='use pyotp.random_base32() to generate totp secret')
 
 
 class UserLogin(SQLModel):
     username: str
     password: str
     captcha_token: Optional[str] = None
-    totp_code: Optional[str] = None
 
+class TotpLogin(SQLModel):
+    username: str
+    totp_code: str = Field(min_length=6, max_length=6, schema_extra={"pattern": "^[0-9]+$"})
+
+class GetCaptcha(SQLModel):
+    username: str
+    group_seed: str
 

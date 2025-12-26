@@ -26,11 +26,11 @@ class CaptchaProtection(Protection):
             return ProtectionResult(allowed=False, user_msg = "required captcha", reason="captcha", status_code=403)
 
         if input_token is None:
-            log.debug(f"User {username} didn't provided a captcha token")
+            log.debug(f"{username:<10} | didn't provided a captcha token")
             return ProtectionResult(allowed=False, user_msg = "required captcha", reason="captcha", status_code=403)
 
         if input_token != stored_token:
-            log.debug(f"User {username} provided Invalid captcha token, expected {stored_token}")
+            log.debug(f"{username:<10} | Invalid captcha token, expected {stored_token}")
             return ProtectionResult(allowed=False, user_msg = "Invalid captcha token", reason="captcha", status_code=403)
 
         return ProtectionResult(allowed=True)
@@ -42,15 +42,15 @@ class CaptchaProtection(Protection):
 
     def record_failure(self, user: User) -> None:
         user.failed_attempts_captcha_counter += 1
-        log.debug(f"failed attempts: {user.failed_attempts_captcha_counter}/{self.max_failed_attempts}")
+        log.debug(f"{user.username:<10} | failed attempts: {user.failed_attempts_captcha_counter}/{self.max_failed_attempts}")
 
         if user.failed_attempts_captcha_counter >= self.max_failed_attempts:
             user.captcha_required = True
-            log.debug( f"Captcha verification ACTIVATED for user '{user.username}'")
+            log.debug( f"{user.username:<10} | Captcha verification ACTIVATED for user '{user.username}'")
 
 
     def generate_token(self, username: str) -> str:
         token = secrets.token_urlsafe(16)
         self.tokens[username] = token
-        log.debug(f"generated captcha token for user '{username}: {token}'")
+        log.info(f"{username} | generated captcha token: {token}'")
         return token
