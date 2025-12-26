@@ -20,5 +20,4 @@ class TotpLogin(SQLModel):
 
 class GetCaptcha(SQLModel):
     username: str
-    group_seed: str
-
+    group_seed: int

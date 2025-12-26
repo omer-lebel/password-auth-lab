@@ -24,7 +24,7 @@ class RateLimitProtection(Protection):
             remaining = user.lockout_until - now
             m = int(remaining // 60)
             s = int(remaining % 60)
-            log.debug(f"{user.username:<10} | Rate limit active' "
+            log.debug(f"{user.username:<10} | Rate limit active "
                       f"(remaining time={int(remaining)}s | lockout_count={user.lockout_count})")
 
             return ProtectionResult(

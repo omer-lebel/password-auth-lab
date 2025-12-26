@@ -15,7 +15,7 @@ class AccountLockoutProtection(Protection):
     def validate_request(self, context: AuthContext) -> ProtectionResult:
 
         if context.user.is_blocked:
-            log.debug(f"{context.user.username:<10} | account locked'")
+            log.debug(f"{context.user.username:<10} | account locked")
             return ProtectionResult(
                 allowed=False,
                 status_code=HTTPStatus.LOCKED,

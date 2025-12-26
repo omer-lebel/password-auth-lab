@@ -18,7 +18,7 @@ async def login_totp(
         session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
-    log.info(f"{user.username:<10}| request")
+    log.info(f"{user.username:<10}| request login_totp")
     protections: ProtectionManager = request.app.state.protection_mng
 
     if not protections.totp:
@@ -38,7 +38,7 @@ async def login_totp(
         raise HTTPException(status_code=result.status_code, detail=result.user_msg)
 
     # verify totp code
-    if not protections.totp.verify_code(username=db_user.username, totp_scret=db_user.totp_secret, input_code=user.totp_code):
+    if not protections.totp.verify_code(username=db_user.username, totp_secret=db_user.totp_secret, input_code=user.totp_code):
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Invalid TOTP code")
 
     protections.totp.reset(db_user)

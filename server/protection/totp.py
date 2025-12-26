@@ -71,7 +71,7 @@ class TOTPProtection(Protection):
             if totp_engine.at(now + drift) == input_code:
                 log.info(f"{username:<10} | TOTP match found with clock drift of {drift} seconds from now")
                 return True
-
+        log.debug(f"{username:<10} | FAILED TOTP verification")
         return False
 
     @staticmethod

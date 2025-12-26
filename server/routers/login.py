@@ -18,7 +18,7 @@ async def login(
         session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
-    log.info(f"{user.username:<10} | request")
+    log.info(f"{user.username:<10} | request login")
     protections: ProtectionManager = request.app.state.protection_mng
 
     # find user

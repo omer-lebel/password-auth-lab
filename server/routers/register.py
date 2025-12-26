@@ -19,7 +19,7 @@ def register(
         session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
-    log.info(f"{user.username:<10} | request")
+    log.info(f"{user.username:<10} | request register")
 
     # check if user exists
     query = select(User).where(User.username == user.username)

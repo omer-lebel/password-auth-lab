@@ -18,7 +18,7 @@ async def generate_captcha_token(
         session: Session = Depends(db_manager.get_session),
         request: Request = None):
 
-    log.info(f"{user.username:<10} | request")
+    log.info(f"{user.username:<10} | request generate_captcha_token")
     protections: ProtectionManager = request.app.state.protection_mng
 
     if not protections.captcha:
@@ -28,15 +28,16 @@ async def generate_captcha_token(
     query = select(User).where(User.username == user.username)
     db_user = session.exec(query).first()
     if not db_user:
-        log.debug(f"{user.username:<10} | failed -  unknown username")
+        log.debug(f"{user.username:<10} | FAILED -  unknown username")
         raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid username or group seed")
 
-    if not db_user.requires_captcha:
+    if not db_user.captcha_required:
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not allowed")
 
     # verify group seed
     if protections.group_seed != user.group_seed:
-        log.debug(f"{user.username:<10} | failed -  wrong group seed")
+        print(user.group_seed)
+        log.debug(f"{user.username:<10} | FAILED -  wrong group seed")
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Invalid username or group seed")
 
     token = protections.generate_captcha_token(user.username)
