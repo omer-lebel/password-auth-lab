@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.ticker import FormatStrFormatter
 import argparse
 
 
@@ -99,13 +100,13 @@ class SecurityAnalyzer:
 
         for _, display_name in self.active_defenses:
             config_lines.append(f"• {display_name:<28}")
-            if not self.active_defenses: config_lines.append("• No active defenses detected")
+        if not self.active_defenses: config_lines.append("• No active defenses")
 
         ax.text(0.05, 0.95, "\n".join(config_lines), transform=ax.transAxes, family='monospace', fontsize=7, va='top',
                 ha='left', linespacing=1.4,
                 bbox=dict(facecolor='#f0f3ff', edgecolor='#74b9ff', boxstyle='round,pad=1', alpha=0.8))
 
-    def _plot_sucess_pie_charts(self, fig, pos_base):
+    def _plot_success_pie_charts(self, fig, pos_base):
         attack_df = self.get_attack_metrics()
         categories = ['weak', 'medium', 'strong']
         for i, cat in enumerate(categories):
@@ -125,7 +126,7 @@ class SecurityAnalyzer:
             ax.set_title(cat.capitalize(), fontsize=8, pad=5, fontweight='semibold')
 
         desc_y, legend_y = pos_base[1] - 0.005, pos_base[1] - 0.025
-        fig.text(pos_base[0] + 0.14, desc_y, 'Percentage of accounts compromised per category', fontsize=7,
+        fig.text(pos_base[0] + 0.14, desc_y, 'Percentage of accounts compromised per password score', fontsize=7,
                  color='gray',
                  ha='center', style='italic')
         for label, color, offset in [('Breached', 'Success', 0.06), ('Protected', 'Fail', 0.16)]:
@@ -158,37 +159,9 @@ class SecurityAnalyzer:
                 if h > 0: ax.annotate(f'{h:.1f}', xy=(b.get_x() + b.get_width() / 2, h), xytext=(0, 3),
                                       textcoords="offset points", ha='center', va='bottom', fontsize=7,
                                       fontweight='bold')
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2, fontsize=8, frameon=True)
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2, fontsize=8, frameon=True)
         sns.despine(ax=ax)
 
-    # def _plot_failure_reason(self, ax):
-    #     failed = self.df[self.df['success'] == False]
-    #     if failed.empty: return
-    #
-    #     # יצירת הגרף
-    #     sns.countplot(ax=ax, data=failed, x='failure_reason', palette='viridis',
-    #                   hue='failure_reason', legend=False)
-    #
-    #     ax.set_title('Blocking Factors', fontweight='bold', pad=15)
-    #     ax.set_xlabel('')
-    #     ax.set_ylabel('Count', fontweight='bold')
-    #
-    #     # label on the
-    #     plt.setp(ax.get_xticklabels(), rotation=30, ha='right', fontsize=8)  # הגדלת גודל הגופן
-    #     ax.tick_params(axis='x', pad=3)
-    #
-    #     # amount and precent
-    #     total_failed = len(failed)
-    #     for p in ax.patches:
-    #         h = p.get_height()
-    #         if h > 0:
-    #             ax.annotate(f'{int(h)}\n({(h / total_failed) * 100:.1f}%)',
-    #                         (p.get_x() + p.get_width() / 2., h),
-    #                         ha='center', va='bottom', fontsize=7,
-    #                         fontweight='bold', xytext=(0, 5),
-    #                         textcoords='offset points')
-    #
-    #     sns.despine(ax=ax)
 
     def _plot_blocking_factor(self, ax):
         failed = self.df[self.df['success'] == False]
@@ -223,25 +196,67 @@ class SecurityAnalyzer:
         ax.set_title('Blocking Factors Distribution', fontweight='bold', pad=15)
         ax.axis('equal')
 
+
     def _plot_requests_over_time(self, ax):
-        df_sorted = self.df.sort_values('timestamp')
-        intensity = df_sorted.set_index('timestamp').resample('1s', label='right').size().reset_index()
-        intensity.columns = ['timestamp', 'count']
-        ax.plot(intensity['timestamp'], intensity['count'], color='navy', alpha=0.75, lw=1, label='Requests/sec')
-        ax.fill_between(intensity['timestamp'], intensity['count'], alpha=0.25, color='navy')
+
+        start_time_experiment = self.df['timestamp'].min()
+        df_copy = self.df.copy()
+        df_copy['relative_time'] = (df_copy['timestamp'] - start_time_experiment).dt.total_seconds()
+        df_sorted = df_copy.sort_values('relative_time')
+
+        intensity = df_sorted.copy()
+        intensity['rel_time_rounded'] = intensity['relative_time'].round()
+        intensity = intensity.groupby('rel_time_rounded').size().reset_index()
+        intensity.columns = ['rel_time', 'count']
+        intensity['rel_time'] = intensity['rel_time'].astype(float)
+        ax.plot(intensity['rel_time'], intensity['count'], color='navy', alpha=0.75, lw=1, label='Requests/sec')
+        ax.fill_between(intensity['rel_time'], intensity['count'], alpha=0.25, color='navy')
+
         breaches = df_sorted[df_sorted['success'] == True].copy()
+        breach_details = []
+
         if not breaches.empty:
-            breaches = pd.merge_asof(breaches.sort_values('timestamp'), intensity, on='timestamp', direction='nearest')
+            user_start_times = df_sorted.groupby('username')['relative_time'].min()
+
+            breaches = pd.merge_asof(
+                breaches.sort_values('relative_time'),
+                intensity.sort_values('rel_time'),
+                left_on='relative_time',
+                right_on='rel_time',
+                direction='nearest'
+            )
+
             for s in ['weak', 'medium', 'strong']:
                 sub = breaches[breaches['password_score'] == s]
-                if not sub.empty: ax.scatter(sub['timestamp'], sub['count'], color=self.colors[s], marker='o', s=40,
-                                             alpha=0.8, label=f'Breach {s}', edgecolor='black', lw=0.5, zorder=5)
+                if not sub.empty:
+                    ax.scatter(sub['relative_time'], sub['count'], color=self.colors[s], marker='o',
+                               s=60, alpha=0.9, label=f'Breach {s}', edgecolor='black', lw=0.8, zorder=5)
+
+                    breach_details.append('\n' + s.upper())
+                    for _, row in sub.iterrows():
+                        duration = row['relative_time'] - user_start_times[row['username']]
+                        line = f"{row['username']:-<8} {duration:.3f}s"
+                        breach_details.append(line)
+
         ax.set_title('Requests over Time', fontweight='bold', pad=15)
+        ax.set_xlabel('Seconds from Start')
         ax.set_ylabel('Requests / second')
-        h, l = ax.get_legend_handles_labels();
+
+        h, l = ax.get_legend_handles_labels()
         d = dict(zip(l, h))
-        ax.legend(d.values(), d.keys(), fontsize=8, loc='upper left', frameon=True)
-        plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
+        ax.legend(d.values(), d.keys(), fontsize=8, loc='upper center',
+                  bbox_to_anchor=(0.5, -0.15), ncol=len(d), frameon=True)
+
+        if breach_details:
+            internal_text = "Time to Breach:\n" + "\n".join(breach_details)
+            ax.text(0.98, 0.05, internal_text, transform=ax.transAxes,
+                    fontsize=7, va='bottom', ha='right', multialignment='left', family='monospace',
+                    bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.7, edgecolor='gray'),
+                    zorder=10)
+
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%ds'))
+
+
 
     def _add_empty_box_border(self, ax):
         ax.set_xticks([]);
@@ -262,7 +277,7 @@ class SecurityAnalyzer:
 
         # upper graphs
         self._create_summery_box(fig, [0.09, 0.80, 0.25, 0.08])
-        self._plot_sucess_pie_charts(fig, [0.4, 0.80])
+        self._plot_success_pie_charts(fig, [0.4, 0.80])
         self._create_config_box(fig, [0.7, 0.80, 0.25, 0.08], input_file)
 
         # -lower graph
