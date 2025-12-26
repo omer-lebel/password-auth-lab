@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
+from http import HTTPStatus
 from sqlmodel import Session, select
 
 from server.log import get_logger
@@ -21,14 +22,14 @@ async def login_totp(
     protections: ProtectionManager = request.app.state.protection_mng
 
     if not protections.totp:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Not found")
 
     # find user
     query = select(User).where(User.username == user.username)
     db_user = session.exec(query).first()
     if not db_user:
         log.debug(f"{user.username:<10} | FAILED -  unknown username")
-        raise HTTPException(status_code=401, detail="Invalid username or totp code")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid username or totp code")
 
     # verify totp session not expired
     result: ProtectionResult = protections.totp.validate_request(AuthContext(user=db_user))
@@ -38,7 +39,7 @@ async def login_totp(
 
     # verify totp code
     if not protections.totp.verify_code(username=db_user.username, totp_scret=db_user.totp_secret, input_code=user.totp_code):
-        raise HTTPException(status_code=401, detail="Invalid TOTP code")
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Invalid TOTP code")
 
     protections.totp.reset(db_user)
     session.commit()

@@ -1,4 +1,7 @@
 import secrets
+from http import HTTPStatus
+
+from fastapi import HTTPException
 
 from .base import Protection, ProtectionResult, AuthContext
 from server.log import logger as log
@@ -22,16 +25,25 @@ class CaptchaProtection(Protection):
         stored_token = self.tokens.pop(username, None)
 
         if stored_token is None:
-            log.debug(f"No captcha token for {username}")
-            return ProtectionResult(allowed=False, user_msg = "required captcha", reason="captcha", status_code=403)
+            log.debug(f"{username:<10} User didn't generate captcha token")
+            return ProtectionResult(allowed=False,
+                                    status_code=HTTPStatus.PRECONDITION_REQUIRED,
+                                    user_msg = "required captcha",
+                                    reason="captcha")
 
         if input_token is None:
-            log.debug(f"{username:<10} | didn't provided a captcha token")
-            return ProtectionResult(allowed=False, user_msg = "required captcha", reason="captcha", status_code=403)
+            log.debug(f"{username:<10} | User didn't provided captcha token")
+            return ProtectionResult(allowed=False,
+                                    status_code=HTTPStatus.PRECONDITION_REQUIRED,
+                                    user_msg = "required captcha",
+                                    reason="captcha")
 
         if input_token != stored_token:
             log.debug(f"{username:<10} | Invalid captcha token, expected {stored_token}")
-            return ProtectionResult(allowed=False, user_msg = "Invalid captcha token", reason="captcha", status_code=403)
+            return ProtectionResult(allowed=False,
+                                    status_code=HTTPStatus.PRECONDITION_REQUIRED,
+                                    user_msg = "Invalid captcha token",
+                                    reason="captcha")
 
         return ProtectionResult(allowed=True)
 

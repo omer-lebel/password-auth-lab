@@ -1,4 +1,5 @@
 import time
+from http import HTTPStatus
 
 from server.log import logger as log
 from .base import Protection, ProtectionResult, AuthContext
@@ -30,7 +31,7 @@ class RateLimitProtection(Protection):
                 allowed=False,
                 reason="rate limiting",
                 user_msg=f"Rate limited, try again in {m} min {s} sec",
-                status_code=429
+                status_code=HTTPStatus.TOO_MANY_REQUESTS
             )
 
         return ProtectionResult(allowed=True)

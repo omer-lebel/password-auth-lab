@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
+from http import HTTPStatus
 from sqlmodel import Session, select
 
 from server.log import get_logger
@@ -21,19 +22,22 @@ async def generate_captcha_token(
     protections: ProtectionManager = request.app.state.protection_mng
 
     if not protections.captcha:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Not found")
 
     # find user
     query = select(User).where(User.username == user.username)
     db_user = session.exec(query).first()
     if not db_user:
         log.debug(f"{user.username:<10} | failed -  unknown username")
-        raise HTTPException(status_code=403, detail="Invalid username or group seed")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid username or group seed")
+
+    if not db_user.requires_captcha:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not allowed")
 
     # verify group seed
-    if not protections.group_seed != user.group_seed:
+    if protections.group_seed != user.group_seed:
         log.debug(f"{user.username:<10} | failed -  wrong group seed")
-        raise HTTPException(status_code=403, detail="Invalid username or group seed")
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Invalid username or group seed")
 
     token = protections.generate_captcha_token(user.username)
     return {"captcha_token": token}

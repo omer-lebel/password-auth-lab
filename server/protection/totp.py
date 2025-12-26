@@ -1,5 +1,6 @@
 import base64
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import pyotp
 import time
 
@@ -28,14 +29,14 @@ class TOTPProtection(Protection):
         if not context.user.totp_secret:
             log.debug(f"{username:<10} | TOTP requested, but user haven't register with totp")
             return ProtectionResult(allowed=False,
-                                    status_code= 403,
+                                    status_code= HTTPStatus.FORBIDDEN,
                                     reason='unauthorized totp attempt',
                                     user_msg="Access denied")
 
         if not context.user.pending_totp:
             log.debug(f"{username:<10} | TOTP requested, but user haven't log with his password")
             return ProtectionResult(allowed=False,
-                                    status_code= 401,
+                                    status_code= HTTPStatus.FORBIDDEN,
                                     reason='unauthorized totp attempt',
                                     user_msg="Access denied")
 
@@ -44,7 +45,7 @@ class TOTPProtection(Protection):
             log.debug(f"{username:<10} | TOTP requested, but session expired")
             return ProtectionResult(
                 allowed=False,
-                status_code=401,
+                status_code=HTTPStatus.FORBIDDEN,
                 reason='totp session expired',
                 user_msg="Your session has expired. Please log in again with your password."
             )

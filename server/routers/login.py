@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
+from http import HTTPStatus
 from sqlmodel import Session, select
 
 from server.log import get_logger
@@ -26,7 +27,7 @@ async def login(
     request.state.username = user.username
     if not db_user:
         request.state.failure_reason = "Unknown username"
-        raise HTTPException(status_code=401, detail="Wrong username or password")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Wrong username or password")
 
     request.state.password_score = db_user.password_score
 
@@ -42,14 +43,17 @@ async def login(
         protections.record_failure(db_user)
         session.commit()
         request.state.failure_reason = "Wrong password"
-        raise HTTPException(status_code=401, detail="Wrong username or password")
+        # captcha
+        if protections.totp and db_user.user.captcha_required:
+            raise HTTPException(status_code=HTTPStatus.PRECONDITION_REQUIRED, detail="required captcha")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Wrong username or password")
 
     # totp
     if protections.totp and db_user.totp_secret:
         protections.totp.init_pending_session(db_user)
         request.state.failure_reason = "totp"
         session.commit()
-        raise HTTPException(status_code=201, detail="Password verified, required TOTP. Please call /login_totp")
+        raise HTTPException(status_code=HTTPStatus.ACCEPTED, detail="Password verified, required TOTP. Please call /login_totp")
 
     protections.reset(db_user)
     session.commit()

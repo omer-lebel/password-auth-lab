@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from .base import Protection, ProtectionResult, AuthContext
 from server.log import logger as log
 from server.database import User
@@ -16,9 +18,9 @@ class AccountLockoutProtection(Protection):
             log.debug(f"{context.user.username:<10} | account locked'")
             return ProtectionResult(
                 allowed=False,
+                status_code=HTTPStatus.LOCKED,
                 user_msg = "Account locked, contact admin to reset your password",
-                reason="account locked",
-                status_code=403)
+                reason="account locked")
 
         return ProtectionResult(allowed=True)
 

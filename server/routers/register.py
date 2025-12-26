@@ -1,7 +1,5 @@
-import base64
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException, Depends, Request
+from http import HTTPStatus
 from sqlmodel import Session, select
 from zxcvbn import zxcvbn
 
