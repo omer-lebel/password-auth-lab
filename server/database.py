@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from sqlmodel import SQLModel, Session, Field, create_engine, JSON
 from typing import Generator, Optional, List
@@ -11,7 +12,7 @@ class DatabaseManager:
         db_path = output_dir / "database.db"
         database_url = f"sqlite:///{db_path.absolute().as_posix()}"
 
-        self.engine = create_engine(database_url, echo=False)
+        self.engine = create_engine(database_url, echo=False, pool_size=20, max_overflow=10)
         SQLModel.metadata.create_all(self.engine)
 
     def get_session(self) -> Generator[Session, None, None]:
@@ -42,7 +43,11 @@ class User(SQLModel, table=True):
     # captcha
     captcha_required: bool = False
     failed_attempts_captcha_counter: int = 0
+
     # totp
     totp_secret: Optional[str] = None
+    pending_totp: Optional[bool] = Field(default=False)
+    totp_session_expiry: Optional[datetime] = Field(default=None)
+
 
 db_manager = DatabaseManager()

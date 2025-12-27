@@ -2,7 +2,6 @@
 
 ## 🚀 Getting Started 
 
-This will regenerate the `requirements.txt` file:
 ```bash
 cd log_analayzer
 python main.py --input=<attemp.jsonl>

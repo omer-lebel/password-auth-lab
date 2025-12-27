@@ -52,6 +52,7 @@ class CaptchaConfig(BaseModel):
 class TOTPConfig(BaseModel):
     enabled: bool
     max_drift_seconds: int = Field(ge=1)
+    pending_totp_minutes: int = Field(ge=1)
 
 
 class ProtectionConfig(BaseModel):

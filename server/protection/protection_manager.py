@@ -1,10 +1,11 @@
 from typing import List
+
 from server.config import ProtectionConfig
 from server.database import User
 from .base import Protection, ProtectionResult, AuthContext
 from .rate_limmiting import RateLimitProtection
 from .account_lockout import AccountLockoutProtection
-from .capcha import CaptchaProtection
+from .captcha import CaptchaProtection
 from .totp import TOTPProtection
 
 
@@ -27,10 +28,10 @@ class ProtectionManager:
 
         if conf.totp.enabled:
             self.totp = TOTPProtection(conf.totp)
-            self.protections.append(self.totp)
+            # totp validation is in different endpoint, therefore totp is not part of the protections list
 
-    def validate_request(self, user: User, captcha_token: str, totp_code: str) -> ProtectionResult:
-        context = AuthContext(user=user,captcha_token=captcha_token, totp_code=totp_code)
+    def validate_request(self, user: User, captcha_token: str) -> ProtectionResult:
+        context = AuthContext(user=user,captcha_token=captcha_token)
         for protection in self.protections:
             results = protection.validate_request(context)
             if not results.allowed:
@@ -52,10 +53,4 @@ class ProtectionManager:
         if self.captcha is None:
             raise Exception("No captcha available")
         return self.captcha.generate_token(username)
-
-
-    def verify_totp(self, totp_secret, totp_code):
-        if self.totp is None:
-            return True
-        return self.totp.verify(totp_secret, totp_code)
 

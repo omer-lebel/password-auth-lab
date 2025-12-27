@@ -75,8 +75,12 @@ def setup_logger(audit_config : AuditConfig, log_level: LogLevel, output_dir: Pa
     logger.add(
         sys.stderr,
         level=log_level,
-        format="<level>{level:<8}</level> <green>{time:HH:mm:ss}</green> | <level>{message}</level>"
-    )
+        format=(
+            "<level>{level:<5}</level> | "
+            "<level>{time:HH:mm:ss}</level> | "
+            "<magenta>{module:<15}</magenta> | "
+            "<level>{message}</level>"
+        )  )
 
     # Register custom level
     logger.level("AUDIT", no=45, color="<YELLOW>")

@@ -15,16 +15,17 @@
     "rate_limiting": {
       "enabled": false,
       "window_seconds": 60,
-      "max_attempt_per_time": 10,
-      "initial_lock_second": 30
+      "max_attempt_per_time": 5,
+      "initial_lock_second": 10
     },
     "captcha": {
-      "enabled": true,
+      "enabled": false,
       "max_failed_attempts": 3
     },
     "totp": {
       "enabled": false,
-      "max_drift_seconds": 30
+      "max_drift_seconds": 30,
+      "pending_totp_minutes" : 3
     }
   }
 }

@@ -3,6 +3,7 @@
 # ============================================================
 from attacks.base_attack import BaseAttack
 from core.LoginResult import LoginResult
+from tqdm import tqdm
 
 
 # ============================================================
@@ -53,8 +54,10 @@ class PasswordSprayAttack(BaseAttack):
         Executes the password spraying attack by iterating
         over passwords first, then over all target users.
         """
+        pbar = tqdm(total=len(self.passwords), desc="password dictionary", dynamic_ncols=True)
 
         for password in self.passwords:
+            pbar.update(1)
             for user in self.users:
 
                 # ------------------------------------------------
@@ -81,10 +84,10 @@ class PasswordSprayAttack(BaseAttack):
                 # Handle login result
                 # ------------------------------------------------
                 if result == LoginResult.SUCCESS:
-                    print(f"[!] Attack succeeded on {user.username}")
+                    tqdm.write(f"[!] Attack succeeded on {user.username}")
 
                 if result == LoginResult.PARTIAL_SUCCESS:
-                    print(f"[!] Password correct for {user.username}, TOTP required")
+                    tqdm.write(f"[!] Password correct for {user.username}, TOTP required")
 
                 if result == LoginResult.LOCKED:
-                    print(f"[!] Attack stopped on {user.username}: account locked")
+                    tqdm.write(f"[!] Attack stopped on {user.username}: account locked")

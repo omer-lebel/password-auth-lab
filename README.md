@@ -1,93 +1,47 @@
 # 🔐 Passwords Authentication Lab
+todo add short explanation
 
-## 🚀 Getting Started 
-
-### 1. Clone (Download) the project:
+## 🚀 Getting Started
+### Clone (Download) the project:
 ```bash
 git clone git@github.com:omer-lebel/password-auth-lab.git
-cd password-auth-lab
 ```
-### 2. Setup Environment:
+### Setup Environment:
 ```bash
+cd password-auth-lab
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
-
-### 3. Run the server
+## Running
+###  1. Turn on the server
+edit the `config.json` as you wish ...
+todo add here or somewhere explain about the config file 
 ```bash
-
+cd password-auth-lab
 python -m server.main --config=<path_to_config.json> --output=<outputdir>
 ```
 * `--config` - Path to config JSON file (default: config.json)
 * `--output` -  Output directory for database, logs, and config copy
----
-
-## 📦 Adding New Dependencies
-
-### 1. Add to `requirements.in`
-Edit your `requirements.in` file and add the new package:
-```
-requests
-libs # new dependency
-```
-
-### 2. Recompile
-This will regenerate the `requirements.txt` file:
+###  2. Register the clients
 ```bash
-pip-compile --upgrade requirements.in
+python register/main.py
 ```
 
-### 3. Update Your Environment
+###  3. Run the attacker
 ```bash
-pip install -r requirements.txt
+cd attacker
+python main.py --attack=<attack type>
 ```
-
-> **⚠️ Note: To downgrade modules:**
-> 1. Deactivate env if needed: `deactivate`
-> 2. Delete old env: `rm -rf .venv`
-> 3. Create new env: `python -m venv .venv`
-> 4. Activate it: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`)
-> 5. Install pip-tools: `pip install pip-tools`
-> 6. Edit `requirements.in` as needed (pin versions like `libs==1.2.3`)
-> 7. Run step 2 and 3 (Recompile & reinstall)
----
-
-## ⚙️ Git Cheat Sheet - basic workflow
-
-### 1️⃣ Verify you are on the main branch
+* `--attacke` - the attack type:
+  * `spray` - for spraying attack over all the users in `users.json`
+  * `brute_force` - for brute force attack over the users in `some file`
+  * `both`
+Both of the attack using the dictionary password, and do up to 100,000 login 
+###  4. Analyze with log analyzer
 ```bash
-git branch 
+cd log_analayzer
+python main.py --input=<attemp.jsonl>
 ```
-
-### 2️⃣ Pull Changes to make sure you are updated
-```bash
-git pull
-```
-
-### 3️⃣ Create and move to a new branch
-```bash
-git checkout -b <branch-name>
-```
-
-### 4️⃣ Make Your Changes
-Edit files in your project like normal.
-
-### 5️⃣ Stage Your Changes 
-Tell git which files to track:
-```bash
-git add <file-name>
-```
-
-### 6️⃣ Commit Your Changes (local save)
-Save your changes to your local `.git` repository.
-Do this frequently.
-```bash
-git commit -m "description msg"
-```
-
-### 7️⃣ Push Your Changes to remote
-Do this at more significant checkpoints — after several commits or when you complete a piece of work.
-```bash
-git push
-```
+* `--input` - path to **attempt.jsonl** file
+* **output pdf** - will be generated in the same dir as the input file
