@@ -30,6 +30,7 @@ zxcvbn-python
 #  attacker
 # --------------------------
 requests
+tqdm
 
 # --------------------------
 #  log analyzer

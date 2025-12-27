@@ -28,7 +28,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
         # record after request
         latency_ms = (time.perf_counter() - start_time) * 1000
         memory_delta_mb = process.memory_info().rss / 1024 / 1024 - memory_start
-        cpu_usage_ms = time.thread_time() - start_cpu_thread * 1000
+        cpu_usage_ms = (time.thread_time() - start_cpu_thread) * 1000
         is_success = response.status_code == HTTPStatus.OK
         reason = "success" if is_success else request.state.failure_reason
 

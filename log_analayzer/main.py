@@ -199,7 +199,7 @@ class SecurityAnalyzer:
     @staticmethod
     def format_duration(seconds):
         if seconds < 60:
-            return f"{seconds:>5.2f}s"
+            return f"{seconds:.2f}s"
 
         minutes = int(seconds // 60)
         if minutes < 60:
@@ -208,7 +208,7 @@ class SecurityAnalyzer:
 
         hours = int(seconds // 3600)
         minutes = int((seconds % 3600) // 60)
-        return f"{hours:>3}h:{minutes:02d}m"
+        return f"{hours}h:{minutes:02d}h"
 
 
 

@@ -15,7 +15,7 @@ LOG_FILE = "log.txt"
 
 #============== Timeout =====================#
 MAX_ATTACK_TIME = 7200 #2 hours 
-MAX_ATTEMPTS = 50000
+MAX_ATTEMPTS = 100000
 REQUEST_TIMEOUT = 5
 
 #============== Servre Status Codes =====================#

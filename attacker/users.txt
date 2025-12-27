@@ -1,11 +1,32 @@
 tomer
 omer
+guest
+user
+demo
 test
+alpha
+beta
+charlie
+david
 
 admin
-linda
 alice
+service
+office
+john
+michael
+susan
+mark
+linda
+backup
 
 sysadmin
+security
+infra
+devops
+support
+logging
+monitor
+keren
 ron
 root
