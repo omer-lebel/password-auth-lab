@@ -12,7 +12,7 @@ class DatabaseManager:
         db_path = output_dir / "database.db"
         database_url = f"sqlite:///{db_path.absolute().as_posix()}"
 
-        self.engine = create_engine(database_url, echo=False)
+        self.engine = create_engine(database_url, echo=False, pool_size=20, max_overflow=10)
         SQLModel.metadata.create_all(self.engine)
 
     def get_session(self) -> Generator[Session, None, None]:

@@ -13,7 +13,7 @@ login_router = APIRouter(tags=["login"])
 log = get_logger()
 
 @login_router.post("/login")
-async def login(
+def login(
         user: UserLogin,
         session: Session = Depends(db_manager.get_session),
         request: Request = None):

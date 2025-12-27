@@ -196,6 +196,21 @@ class SecurityAnalyzer:
         ax.set_title('Blocking Factors Distribution', fontweight='bold', pad=15)
         ax.axis('equal')
 
+    @staticmethod
+    def format_duration(seconds):
+        if seconds < 60:
+            return f"{seconds:>5.2f}s"
+
+        minutes = int(seconds // 60)
+        if minutes < 60:
+            seconds = int(seconds % 60)
+            return f"{minutes}:{seconds:02d}m"
+
+        hours = int(seconds // 3600)
+        minutes = int((seconds % 3600) // 60)
+        return f"{hours:>3}h:{minutes:02d}m"
+
+
 
     def _plot_requests_over_time(self, ax):
 
@@ -235,7 +250,8 @@ class SecurityAnalyzer:
                     breach_details.append('\n' + s.upper())
                     for _, row in sub.iterrows():
                         duration = row['relative_time'] - user_start_times[row['username']]
-                        line = f"{row['username']:-<8} {duration:.3f}s"
+                        formatted_time = self.format_duration(duration)
+                        line = f"{row['username']:-<10} {formatted_time}"
                         breach_details.append(line)
 
         ax.set_title('Requests over Time', fontweight='bold', pad=15)

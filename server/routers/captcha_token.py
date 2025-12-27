@@ -13,7 +13,7 @@ log = get_logger()
 
 
 @generate_captcha_token_router.post("/admin/generate_token/{group_seed}")
-async def generate_captcha_token(
+def generate_captcha_token(
         user : GetCaptcha,
         session: Session = Depends(db_manager.get_session),
         request: Request = None):
