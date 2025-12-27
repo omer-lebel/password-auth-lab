@@ -7,6 +7,21 @@ against real-world attack scenarios (password spraying and brute-force) with con
 This project is for **educational and research purposes only**. It is designed to demonstrate how different security configurations impact authentication security. 
 Do not use these tools against any system you do not have explicit permission to test.
 
+## 📍 Table of Contents
+* [📋 Overview](#-overview)
+* [🚀 Getting Started](#-getting-started)
+  * [Prerequisites](#prerequisites)
+  * [Installation](#installation)
+* [🔧 Configuration](#-configuration)
+  * [Server Configuration](#server-configuration-configjson)
+  * [User Configuration](#user-configuration-usersjson)
+* [🧪 Usage](#-usage)
+  * [1. Start Server](#1-start-server-)
+  * [2. Register Users](#2-register-users-)
+  * [3. Run Attack](#3-run-attack-in-different-terminal-)
+  * [4. Analyze Results](#4-analyze-results-)
+* [📁 Project Structure](#-project-structure)
+
 ## 📋 Overview
 
 - **Server**: FastAPI authentication server with multiple hashing algorithms and security protections
@@ -83,20 +98,20 @@ Note that TOTP is **optional**
 
 ## 🧪 Usage
 
-### 1. 🖥️ Start Server
+### 1. Start Server 🖥️
 ```bash
 python -m server.main --config=config.json --output=./results/exp1
 ```
 - `--config`: Configuration JSON file (default: `config.json`)
 - `--output`: Output directory for database and logs (default: current directory)
 
-### 2. 👥 Register Users
+### 2. Register Users 👥
 ```bash
 python users_register/register.py
 ```
 This script reads `users.json` and populates the server database.
 
-### 3. ⚔️ Run Attack *(in different terminal)*
+### 3. Run Attack *(in different terminal)* ⚔️
 Launch simulated attacks using the included dictionary file. Both attack modes utilize `attacker/password.txt`, 
 which contains 100,000 common passwords.
 ```bash
@@ -109,7 +124,7 @@ Attack Types:
 
 both use the dictionary attack from attacker/password.txt
 
-### 4. 📊 Analyze Results
+### 4. Analyze Results  📊
 ```bash
 cd log_analyzer
 python main.py --input=../results/ex1/attempt.jsonl
